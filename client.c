@@ -8,6 +8,7 @@ int main(int argc , char *argv[])
     int sock;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
+int maxValue;
      
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
@@ -93,6 +94,22 @@ printf("\n");
 					printf("Array has been sent \n");
 					printf("Array's 1st element is %d \n",integerArray[0]);
 					counter = counter + 1;
+
+					//adding code here to receive the max value from the server
+					while(1)
+					{
+						//this while loop exists to receive the max value from the server
+						int statusOfRead = recv(sock , &maxValue , sizeof(maxValue),0);
+						if(statusOfRead > 0)
+						{
+							//this means the max value has been returned to the client
+							printf("The max value in the passed array was %d \n",maxValue);
+							break;
+							//this breaks from the second internal while
+						}//end of if
+					}//end of while
+
+
 					break;
 					//this is supposed to break from the internal while
 				}

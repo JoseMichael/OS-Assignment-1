@@ -142,6 +142,11 @@ read_size = recv(sock , testarray , sizeof(testarray) , 0);
 
 				int maxValueInTheArray = max(testvar,intArray);
 				printf("The max value in that array was %d \n", maxValueInTheArray);
+				//writing the result back to the client
+				write(sock , &maxValueInTheArray , sizeof(maxValueInTheArray));
+
+//write format
+//write(sock , client_message , strlen(client_message));
 
 /*
 all below code was used to check if array is being received properly
