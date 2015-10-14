@@ -1,3 +1,11 @@
+/*
+
+Operating Systems Project 1
+Server Code
+Jose Michael Joseph
+Bhavin Modi
+
+*/
 #include<stdio.h>
 #include<string.h>    //strlen
 #include<stdlib.h>    //strlen
@@ -88,109 +96,60 @@ void *connection_handler(void *socket_desc)
 	int testvar=0;
 	int **testarray;
 
+//Counter is a depricated variable that is being kept for future use
 int counter=0;
      
     //Receive a message from client
 while(1)
 {
-/* trying to restructure code to keep nested whiles
-if(counter==0)
-{
-read_size = recv(sock , &testvar , sizeof(testvar) , 0);
-}
-else
-{
-read_size = recv(sock , testarray , sizeof(testarray) , 0);
-}
-*/
-
-	//step 1 : read the size message
+	//code to read the size of the array that will be sent
 	read_size = recv(sock , &testvar , sizeof(testvar) , 0);
-    	if( read_size > 0 )
-    	{
-        //Send the message back to client
-        	printf("yup got the message for counter %d \n",counter);
-
-//dummy code to print array
-/*	if(counter==1)
+	if( read_size > 0 )
 	{
-		int j=0;
-		printf("Values are \n");
-		for(j=0; j<testvar; j++)
-		{
-			printf("%d ", &testarray[j]);
-		}
-	}
+		//Send the message back to client
 
-*/
-//adding an integer array with size got from before
+		//adding an integer array with size got from before
 		int intArray[testvar];
-		//trying with fixed size
-		//int intArray[10];
 
-//adding a while that will look for the array
-		printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
+
+		//adding a while that will look for the array
+		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
 		while(1)
+		//this while is used to receive the array from the client
 		{
-			//printf("Looking for array now \n");
-			
+
 			read_size = recv(sock , intArray , sizeof(intArray) , 0);
-			//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
 			if(read_size > 0)
 			{
 				printf("Array received \n");
 
 				int maxValueInTheArray = max(testvar,intArray);
-				printf("The max value in that array was %d \n", maxValueInTheArray);
+				//printf used to test code -- printf("The max value in that array was %d \n", maxValueInTheArray);
 				//writing the result back to the client
 				write(sock , &maxValueInTheArray , sizeof(maxValueInTheArray));
 
-//write format
-//write(sock , client_message , strlen(client_message));
-
-/*
-all below code was used to check if array is being received properly
-				printf("Array's 1st element is %d \n",intArray[0]);
-				printf("Array's 3rd element is %d \n",intArray[2]);
-printf("Printing array to test \n");
-		int j=0;
-printf("Size of testvar is %d \n",testvar);
-//printf("Size of one elemeant of intarr is %d \n",(int)sizeof(intArray[0]));
-//printf("No of elements in intArray are %d \n",(int)(testvar/sizeof(intArray[0])));
-		printf("Values are \n");
-		for(j=0; j<(testvar); j++)
-		{
-			printf("%d \n", intArray[j]);
-		}
-
-*/
-	
-
-
-
 				break;
 				//the break is supposed to ideally break the internal while
-			}
-		}
+			}//end of if that checks if inside second while
+		}//end of while that looks for array
 
 		counter = counter + 1;
 
+	}//end of if
+	else if(read_size == 0)
+	{
+		puts("Client disconnected");
+		fflush(stdout);
+	}
+	else if(read_size == -1)
+	{
+		perror("recv failed");
+	}
 
+}//end of while
 
-    	}
-    else if(read_size == 0)
-    {
-        puts("Client disconnected");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
-    }
-}
-         
-    //Free the socket pointer
-    free(socket_desc);
-     
-    return 0;
+//Free the socket pointer
+free(socket_desc);
+
+return 0;
 }

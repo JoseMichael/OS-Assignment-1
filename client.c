@@ -1,3 +1,11 @@
+/*
+
+Operating Systems Project 1
+Client Code
+Jose Michael Joseph
+Bhavin Modi
+
+*/
 #include<stdio.h> //printf
 #include<string.h>    //strlen
 #include<sys/socket.h>    //socket
@@ -8,7 +16,7 @@ int main(int argc , char *argv[])
     int sock;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
-int maxValue;
+    int maxValue; int sizeOfArray=0;
      
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
@@ -31,41 +39,40 @@ int maxValue;
      
     puts("Connected\n");
      
+//--------------Quick Note/Self Reminder----------------
+//"counter" (below) is an old variable I used to toggle between different sections
+//Its use has since been depricated but I am still considering if there is any benefits
+//That can be achieved by having it in the code and hence keeping it in for the time being
+//In my mind this could be something useful that helps us toggle between different input
+//methods when we take in different data types. Will have to think more on it
+//---------------------------------------------------------
     int counter = 0;
 
     //keep communicating with server
 
-//int **integerArray;
-int sizeOfArray=0;
+
+
     while(1)
     {
+     //this is the first while, it's job was to initially direct the flow to different sections of the code
+     //Now its sort of useless. Until further brain storming that is.
 
- if(counter==0)
+     if(counter==0)
 	{
 
         printf("Enter the size of the array : ");
         scanf("%d" , &sizeOfArray);
-	//int integerArray[sizeOfArray];
-	//integerArray = malloc(sizeof(int)*sizeOfArray);
+        //we now create an array based on that size.
+        //Please note the scope of that array would be limited to the scope of the above "if"
 	int integerArray[sizeOfArray];
-	//trying fixed size; experimentation only; need to delete====================================
-	//int integerArray[10];
 	printf("Please enter the various array elements \n");
 	int j = 0;
 	for(j=0; j<sizeOfArray; j++)
 	{
-	scanf("%d",&integerArray[j]);
+	//this for loop is used to take in the various elements for the array
+		scanf("%d",&integerArray[j]);
 	}
 
-//quick reprinting array========to delete=======================
-printf("So this is the list of elements being sent \n");
-	for(j=0; j<sizeOfArray; j++)
-	{
-	printf("%d",integerArray[j]);
-	}
-printf("\n");
-
-	int valToTestAndDiscard = 15;	
 	
 	//sending size first
 	printf("Checkpoint Inside Send ka Size ka if \n");
@@ -80,9 +87,9 @@ printf("\n");
 		{
 			while(1)
 			{
+			//this while is used to send the array to the server
 
 				//adding code here to send array
-				printf("Here the send is gonna send an array with size of %d \n", (int)sizeof(integerArray));
 				int statusOfSend2 = send(sock , integerArray , sizeof(integerArray) , 0);
 				if( statusOfSend2 < 0)
 				{
@@ -91,8 +98,10 @@ printf("\n");
 				}
 				else if(statusOfSend2>0)
 				{
+				//this section is entered when the array has been sent successfully
+				//we will now have to look for the result of that operation
+
 					printf("Array has been sent \n");
-					printf("Array's 1st element is %d \n",integerArray[0]);
 					counter = counter + 1;
 
 					//adding code here to receive the max value from the server
@@ -118,22 +127,8 @@ printf("\n");
 		}
 	}
 	else if(counter==1)
-	{/*
-	
-		printf("Checkpoint Inside Send ka Old Array ka if \n");
-		//int statusOfSend = send(sock , message , strlen(message) , 0);
-		//int statusOfSend2 = send(sock , integerArray , sizeOfArray , 0);
-		int statusOfSend2 = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
-			if( statusOfSend2 < 0)
-			{
-			    puts("Send failed");
-			    return 1;
-			}
-			else if(statusOfSend2>0)
-			{
-				counter = counter + 1;
-			}
-*/
+	{
+
 	}//end of else if
       }//end of while
 
