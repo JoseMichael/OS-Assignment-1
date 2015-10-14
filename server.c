@@ -5,6 +5,7 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
 #include<pthread.h> //for threading , link with lpthread
+#include "functions.h"
  
 //the thread function
 void *connection_handler(void *);
@@ -138,6 +139,12 @@ read_size = recv(sock , testarray , sizeof(testarray) , 0);
 			if(read_size > 0)
 			{
 				printf("Array received \n");
+
+				int maxValueInTheArray = max(testvar,intArray);
+				printf("The max value in that array was %d \n", maxValueInTheArray);
+
+/*
+all below code was used to check if array is being received properly
 				printf("Array's 1st element is %d \n",intArray[0]);
 				printf("Array's 3rd element is %d \n",intArray[2]);
 printf("Printing array to test \n");
@@ -150,6 +157,8 @@ printf("Size of testvar is %d \n",testvar);
 		{
 			printf("%d \n", intArray[j]);
 		}
+
+*/
 	
 
 
