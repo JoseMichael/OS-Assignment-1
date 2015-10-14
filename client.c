@@ -46,15 +46,24 @@ int sizeOfArray=0;
         scanf("%d" , &sizeOfArray);
 	//int integerArray[sizeOfArray];
 	//integerArray = malloc(sizeof(int)*sizeOfArray);
-	//int integerArray[sizeOfArray];
+	int integerArray[sizeOfArray];
 	//trying fixed size; experimentation only; need to delete====================================
-	int integerArray[10];
+	//int integerArray[10];
 	printf("Please enter the various array elements \n");
 	int j = 0;
 	for(j=0; j<sizeOfArray; j++)
 	{
 	scanf("%d",&integerArray[j]);
 	}
+
+//quick reprinting array========to delete=======================
+printf("So this is the list of elements being sent \n");
+	for(j=0; j<sizeOfArray; j++)
+	{
+	printf("%d",integerArray[j]);
+	}
+printf("\n");
+
 	int valToTestAndDiscard = 15;	
 	
 	//sending size first
@@ -82,6 +91,7 @@ int sizeOfArray=0;
 				else if(statusOfSend2>0)
 				{
 					printf("Array has been sent \n");
+					printf("Array's 1st element is %d \n",integerArray[0]);
 					counter = counter + 1;
 					break;
 					//this is supposed to break from the internal while

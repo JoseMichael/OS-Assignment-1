@@ -123,9 +123,9 @@ read_size = recv(sock , testarray , sizeof(testarray) , 0);
 
 */
 //adding an integer array with size got from before
-		//int intArray[testvar];
+		int intArray[testvar];
 		//trying with fixed size
-		int intArray[10];
+		//int intArray[10];
 
 //adding a while that will look for the array
 		printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
@@ -138,6 +138,22 @@ read_size = recv(sock , testarray , sizeof(testarray) , 0);
 			if(read_size > 0)
 			{
 				printf("Array received \n");
+				printf("Array's 1st element is %d \n",intArray[0]);
+				printf("Array's 3rd element is %d \n",intArray[2]);
+printf("Printing array to test \n");
+		int j=0;
+printf("Size of testvar is %d \n",testvar);
+//printf("Size of one elemeant of intarr is %d \n",(int)sizeof(intArray[0]));
+//printf("No of elements in intArray are %d \n",(int)(testvar/sizeof(intArray[0])));
+		printf("Values are \n");
+		for(j=0; j<(testvar); j++)
+		{
+			printf("%d \n", intArray[j]);
+		}
+	
+
+
+
 				break;
 				//the break is supposed to ideally break the internal while
 			}
