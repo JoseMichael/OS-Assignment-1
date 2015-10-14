@@ -30,28 +30,53 @@ int main(int argc , char *argv[])
      
     puts("Connected\n");
      
+    int counter = 0;
+
     //keep communicating with server
     while(1)
     {
-        printf("Enter message : ");
-        scanf("%s" , message);
+
+ if(counter==0)
+	{
+	int sizeOfArray=0;
+        printf("Enter the size of the array : ");
+        scanf("%d" , &sizeOfArray);
+	int integerArray[sizeOfArray];
+	printf("Please enter the various array elements \n");
+	int j = 0;
+	for(j=0; j<sizeOfArray; j++)
+	{
+	scanf("%d",&integerArray[j]);
+	}
+	int valToTestAndDiscard = 15;	
+	
+	//sending size first
+	printf("Checkpoint Inside Send ka Size ka if \n");
+	//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+	int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
+		if( statusOfSend < 0)
+		{
+		    puts("Send failed");
+		    return 1;
+		}
+	/*
+	printf("Checkpoint Inside Send ka Array ka if \n");
+	//int statusOfSend = send(sock , message , strlen(message) , 0);
+	int statusOfSend2 = send(sock , integerArray , sizeOfArray , 0);
+		if( statusOfSend2 < 0)
+		{
+		    puts("Send failed");
+		    return 1;
+		}*/
+		else if(statusOfSend>0)
+		{
+			counter = counter + 1;
+		}
+	}
+        
+
          
-        //Send some data
-        if( send(sock , message , strlen(message) , 0) < 0)
-        {
-            puts("Send failed");
-            return 1;
-        }
-         
-        //Receive a reply from the server
-        if( recv(sock , server_reply , 2000 , 0) < 0)
-        {
-            puts("recv failed");
-            break;
-        }
-         
-        puts("Server reply :");
-        puts(server_reply);
+
     }
      
     close(sock);
