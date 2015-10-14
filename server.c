@@ -85,16 +85,70 @@ void *connection_handler(void *socket_desc)
     int read_size;
     char *message , client_message[2000];
 	int testvar=0;
-     
+	int **testarray;
+
+int counter=0;
      
     //Receive a message from client
-    while( (read_size = recv(sock , &testvar , sizeof(testvar) , 0)) > 0 )
-    {
+while(1)
+{
+/* trying to restructure code to keep nested whiles
+if(counter==0)
+{
+read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+}
+else
+{
+read_size = recv(sock , testarray , sizeof(testarray) , 0);
+}
+*/
+
+	//step 1 : read the size message
+	read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+    	if( read_size > 0 )
+    	{
         //Send the message back to client
-        printf("yup got the size \n");
-    }
-     
-    if(read_size == 0)
+        	printf("yup got the message for counter %d \n",counter);
+
+//dummy code to print array
+/*	if(counter==1)
+	{
+		int j=0;
+		printf("Values are \n");
+		for(j=0; j<testvar; j++)
+		{
+			printf("%d ", &testarray[j]);
+		}
+	}
+
+*/
+//adding an integer array with size got from before
+		//int intArray[testvar];
+		//trying with fixed size
+		int intArray[10];
+
+//adding a while that will look for the array
+		printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
+		while(1)
+		{
+			//printf("Looking for array now \n");
+			
+			read_size = recv(sock , intArray , sizeof(intArray) , 0);
+			//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+			if(read_size > 0)
+			{
+				printf("Array received \n");
+				break;
+				//the break is supposed to ideally break the internal while
+			}
+		}
+
+		counter = counter + 1;
+
+
+
+    	}
+    else if(read_size == 0)
     {
         puts("Client disconnected");
         fflush(stdout);
@@ -103,6 +157,7 @@ void *connection_handler(void *socket_desc)
     {
         perror("recv failed");
     }
+}
          
     //Free the socket pointer
     free(socket_desc);

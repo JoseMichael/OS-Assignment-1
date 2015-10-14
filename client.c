@@ -33,15 +33,22 @@ int main(int argc , char *argv[])
     int counter = 0;
 
     //keep communicating with server
+
+//int **integerArray;
+int sizeOfArray=0;
     while(1)
     {
 
  if(counter==0)
 	{
-	int sizeOfArray=0;
+
         printf("Enter the size of the array : ");
         scanf("%d" , &sizeOfArray);
-	int integerArray[sizeOfArray];
+	//int integerArray[sizeOfArray];
+	//integerArray = malloc(sizeof(int)*sizeOfArray);
+	//int integerArray[sizeOfArray];
+	//trying fixed size; experimentation only; need to delete====================================
+	int integerArray[10];
 	printf("Please enter the various array elements \n");
 	int j = 0;
 	for(j=0; j<sizeOfArray; j++)
@@ -52,32 +59,60 @@ int main(int argc , char *argv[])
 	
 	//sending size first
 	printf("Checkpoint Inside Send ka Size ka if \n");
-	//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
-	int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
+	int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+	//int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
 		if( statusOfSend < 0)
 		{
 		    puts("Send failed");
 		    return 1;
 		}
-	/*
-	printf("Checkpoint Inside Send ka Array ka if \n");
-	//int statusOfSend = send(sock , message , strlen(message) , 0);
-	int statusOfSend2 = send(sock , integerArray , sizeOfArray , 0);
-		if( statusOfSend2 < 0)
-		{
-		    puts("Send failed");
-		    return 1;
-		}*/
 		else if(statusOfSend>0)
 		{
-			counter = counter + 1;
+			while(1)
+			{
+
+				//adding code here to send array
+				printf("Here the send is gonna send an array with size of %d \n", (int)sizeof(integerArray));
+				int statusOfSend2 = send(sock , integerArray , sizeof(integerArray) , 0);
+				if( statusOfSend2 < 0)
+				{
+				    puts("Send failed");
+				    return 1;
+				}
+				else if(statusOfSend2>0)
+				{
+					printf("Array has been sent \n");
+					counter = counter + 1;
+					break;
+					//this is supposed to break from the internal while
+				}
+
+			}//end of while
 		}
 	}
-        
+	else if(counter==1)
+	{/*
+	
+		printf("Checkpoint Inside Send ka Old Array ka if \n");
+		//int statusOfSend = send(sock , message , strlen(message) , 0);
+		//int statusOfSend2 = send(sock , integerArray , sizeOfArray , 0);
+		int statusOfSend2 = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+			if( statusOfSend2 < 0)
+			{
+			    puts("Send failed");
+			    return 1;
+			}
+			else if(statusOfSend2>0)
+			{
+				counter = counter + 1;
+			}
+*/
+	}//end of else if
+      }//end of while
 
          
 
-    }
+    
      
     close(sock);
     return 0;
