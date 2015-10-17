@@ -17,6 +17,8 @@ Bhavin Modi
  
 //the thread function
 void *connection_handler(void *);
+
+int * recv2DArrays(int sock, int *rowSize, int *colSize);
  
 int main(int argc , char *argv[])
 {
@@ -97,10 +99,12 @@ void *connection_handler(void *socket_desc)
 	int **testarray;
 
 //Counter is a depricated variable that is being kept for future use
-int counter=0;
+int counter=2;
      
     //Receive a message from client
 while(1)
+{
+if(counter==1)
 {
 	//code to read the size of the array that will be sent
 	read_size = recv(sock , &testvar , sizeof(testvar) , 0);
@@ -145,7 +149,17 @@ while(1)
 	{
 		perror("recv failed");
 	}
+}//end of if counter==0
+else if(counter==2)
+{
 
+int rowSize1, rowSize2, rowSize3;
+int colSize1, colSize2, colSize3;
+
+int *intArray = recv2DArrays(sock, &rowSize1, &colSize1);
+
+
+}//end of counter==1
 }//end of while
 
 //Free the socket pointer
@@ -153,3 +167,113 @@ free(socket_desc);
 
 return 0;
 }
+
+
+
+int recvFromClient(int sock, int typeOfData, int *intArray, int integerToRecv, char *stringToRecv)
+{
+/*
+basic type assumptions for this code
+1. Integer
+2. 1D Array
+3. String
+
+Also note any value that is not needed for sending that type would be set to null
+
+*/
+
+switch(typeOfData)
+{
+
+case 1:
+	while(1)
+	{
+		int statusOfSend = recv(sock , &integerToRecv , sizeof(integerToRecv) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 2:
+	while(1)
+	{
+		int statusOfSend = recv(sock , intArray , sizeof(intArray) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 3:
+	while(1)
+	{
+		int statusOfSend = recv(sock , stringToRecv , sizeof(stringToRecv) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+}//end of switch
+
+return 0; //this shows that there was an error in the send
+}//end of function
+
+
+
+
+
+int * recv2DArrays(int sock, int *rowSize, int *colSize)
+{
+
+int recvRowSizeStatus = recvFromClient(sock, 1, NULL, *rowSize, NULL);
+if(recvRowSizeStatus<0)
+{
+	printf("Error in sending row size \n");
+}
+int recvColSizeStatus = recvFromClient(sock, 1, NULL, *colSize, NULL);
+if(recvRowSizeStatus<0)
+{
+	printf("Error in sending col size \n");
+}
+
+if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
+{
+//this loop is entered if both row and col size have been accepted
+	int serializedSize = *rowSize * *colSize;
+	int integerArray[serializedSize];
+	int *resultPointer=integerArray;
+	
+		int statusOfArraySend = recvFromClient(sock, 2, integerArray, NULL, NULL);
+		if(statusOfArraySend > 0)
+		{
+		//array also has been received successfully
+		printf("Array received successfully \n");
+		return resultPointer;
+		}
+		else if(statusOfArraySend < 0)
+		{
+			printf("Array recv failed \n");
+		}
+
+
+}//end of if for row and col size sent
+
+
+
+}//end of function

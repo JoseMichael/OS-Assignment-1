@@ -135,8 +135,11 @@ int main(int argc , char *argv[])
 	{
 	//this counter is going to be used for taking input for matrix multiplication
 //that requires three matrices; initially coding for serializing and sending one
+
+
 /*
-test code on serializing 2d array
+original code location of sending 2d matrix
+
 int noOfRows;
 int noOfCols;
 printf("Please enter the number for rows \n");
@@ -144,11 +147,36 @@ scanf("%d ",noOfRows);
 printf("Please enter the number for columns \n");
 scanf("%d ",noOfCols);
 int serializedSize = noOfRows*noOfCols;
+int integerArray[serializedSize];
+
+int num=0;
+for(num=0; num<serializedSize; num++)
+{
+	scanf("%d",&integerArray[num]);
+}
+int statusOfSizeSend = sendToServer(sock, 1, NULL, serializedSize, NULL);
+if(statusOfSizeSend > 0)
+{
+	//size has been successfully sent
+	int statusOfArraySend = sendToServer(sock, 2, integerArray, NULL, NULL);
+	if(statusOfArraySend > 0)
+	{
+	//array also has been sent successfully
+	}
+	else if(statusOfArraySend < 0)
+	{
+		printf("Array send failed \n");
+	}
+
+
+}
+else if(statusOfSizeSend < 0)
+{
+	printf("Size send failed \n");
+}
 
 */
-
-
-
+int statusOf2DMatrixSend = send2DMatrixToServer(sock);
 
 
 	}//end of else if
@@ -161,6 +189,56 @@ int serializedSize = noOfRows*noOfCols;
     close(sock);
     return 0;
 }
+
+int send2DMatrixToServer(int sock)
+{
+	int noOfRows;
+	int noOfCols;
+	printf("Please enter the number for rows \n");
+	scanf("%d ",noOfRows);
+	printf("Please enter the number for columns \n");
+	scanf("%d ",noOfCols);
+	int serializedSize = noOfRows*noOfCols;
+	int integerArray[serializedSize];
+
+	int num=0;
+	for(num=0; num<serializedSize; num++)
+	{
+		scanf("%d",&integerArray[num]);
+	}
+
+	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, noOfRows, NULL);
+	int statusOfColSizeSend = sendToServer(sock, 1, NULL, noOfCols, NULL);
+
+	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
+	{
+
+
+	
+		//size has been successfully sent
+		int statusOfArraySend = sendToServer(sock, 2, integerArray, NULL, NULL);
+		if(statusOfArraySend > 0)
+		{
+		//array also has been sent successfully
+		printf("Array has been sent successfully \n");
+		return 1;
+		}
+		else if(statusOfArraySend < 0)
+		{
+			printf("Array send failed \n");
+			return 0;
+		}
+
+
+	
+
+}//end of if with row and col size
+else
+{
+	printf("Error in sending row and col size \n");
+}
+
+}//end of function
 
 int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend)
 {
