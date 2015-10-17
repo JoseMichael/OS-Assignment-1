@@ -10,6 +10,8 @@ Bhavin Modi
 #include<string.h>    //strlen
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
+
+int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend); 
  
 int main(int argc , char *argv[])
 {
@@ -76,7 +78,10 @@ int main(int argc , char *argv[])
 	
 	//sending size first
 	printf("Checkpoint Inside Send ka Size ka if \n");
-	int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+	//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+	//testing new sending function with send to server function
+	int statusOfSend = sendToServer(sock, 1, NULL, sizeOfArray, NULL);
+
 	//int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
 		if( statusOfSend < 0)
 		{
@@ -128,6 +133,23 @@ int main(int argc , char *argv[])
 	}
 	else if(counter==1)
 	{
+	//this counter is going to be used for taking input for matrix multiplication
+//that requires three matrices; initially coding for serializing and sending one
+/*
+test code on serializing 2d array
+int noOfRows;
+int noOfCols;
+printf("Please enter the number for rows \n");
+scanf("%d ",noOfRows);
+printf("Please enter the number for columns \n");
+scanf("%d ",noOfCols);
+int serializedSize = noOfRows*noOfCols;
+
+*/
+
+
+
+
 
 	}//end of else if
       }//end of while
@@ -139,3 +161,67 @@ int main(int argc , char *argv[])
     close(sock);
     return 0;
 }
+
+int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend)
+{
+/*
+basic type assumptions for this code
+1. Integer
+2. 1D Array
+3. String
+
+Also note any value that is not needed for sending that type would be set to null
+
+*/
+
+switch(typeOfData)
+{
+
+case 1:
+	while(1)
+	{
+		int statusOfSend = send(sock , &integerToSend , sizeof(integerToSend) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 2:
+	while(1)
+	{
+		int statusOfSend = send(sock , intArray , sizeof(intArray) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 3:
+	while(1)
+	{
+		int statusOfSend = send(sock , stringToSend , sizeof(stringToSend) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+}//end of switch
+
+return 0; //this shows that there was an error in the send
+}//end of function
