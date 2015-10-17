@@ -15,3 +15,47 @@ int max(int size, int *intarray)
 		}
 return comparer;
 }
+
+int min(int size, int *arr){
+	int minimum = *arr;
+	int i;
+
+	for(i = 1; i < size; i++){
+		if(*(arr+i) < minimum){
+			minimum = *(arr+i);
+		}
+	}
+	
+	return minimum;
+}
+
+void multiply(int *a, int *b, int n, int m, int l, int *c){
+    //Multiply a and b, store in c
+	int i, j, k;
+
+	for(i = 0; i < n; i++){
+		for(j = 0; j < m; j++){
+			for(k = 0; k < l; k++){
+				*(c+((i*l)+k)) = *(c+((i*l)+k)) + (*(a+((i*m)+j)) * *(b+((j*l)+k)));
+			}
+		}
+	}
+}
+
+int wc(char str[]){
+	int i = 0, words = 0, poss = 1;
+	
+	while(str[i] != '\0'){
+		if(str[i] == ' '){
+			poss = 1;
+		}else{
+			if(poss == 1){
+				words++;
+				poss = 0;
+			}
+		}
+		i++;
+	}
+
+	return words;
+}
