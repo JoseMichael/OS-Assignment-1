@@ -59,3 +59,41 @@ int wc(char str[]){
 
 	return words;
 }
+
+void quicksort(int* array, int low, int high){
+	int i = low;
+	int j = high;
+	int temp;
+	
+	int pivot = *(array+((low+high)/2));
+	
+	/*partition*/
+	while(i <= j){
+		while(*(array+i) < pivot)
+			i++;
+
+		while (*(array+j) > pivot)
+			j--;
+
+		if(i <= j){
+			temp = *(array+i);
+			*(array+i) = *(array+j);
+			*(array+j) = temp;
+			i++;
+			j--;
+		}
+	}
+
+	if(low < j){
+		quicksort(array,low,j);
+	}
+
+	if(i < high){
+		quicksort(array,i,high);
+	}
+}
+
+int * sort(int size, int* array){
+	quicksort(array,0,size-1);
+	return array;
+}
