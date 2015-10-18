@@ -48,7 +48,7 @@ int main(int argc , char *argv[])
 //In my mind this could be something useful that helps us toggle between different input
 //methods when we take in different data types. Will have to think more on it
 //---------------------------------------------------------
-    int counter = 0;
+    int counter = 1;
 
     //keep communicating with server
 
@@ -195,12 +195,13 @@ int send2DMatrixToServer(int sock)
 	int noOfRows;
 	int noOfCols;
 	printf("Please enter the number for rows \n");
-	scanf("%d ",noOfRows);
+	scanf("%d",&noOfRows);
 	printf("Please enter the number for columns \n");
-	scanf("%d ",noOfCols);
+	scanf("%d",&noOfCols);
 	int serializedSize = noOfRows*noOfCols;
 	int integerArray[serializedSize];
 
+	printf("Please enter the values for the array");
 	int num=0;
 	for(num=0; num<serializedSize; num++)
 	{
@@ -216,7 +217,7 @@ int send2DMatrixToServer(int sock)
 
 	
 		//size has been successfully sent
-		int statusOfArraySend = sendToServer(sock, 2, integerArray, NULL, NULL);
+		int statusOfArraySend = sendToServer(sock, 2, integerArray, -999, NULL);
 		if(statusOfArraySend > 0)
 		{
 		//array also has been sent successfully

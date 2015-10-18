@@ -19,6 +19,7 @@ Bhavin Modi
 void *connection_handler(void *);
 
 int * recv2DArrays(int sock, int *rowSize, int *colSize);
+int recvFromClient(int sock, int typeOfData, int *intArray, int *integerToRecv, char *stringToRecv);
  
 int main(int argc , char *argv[])
 {
@@ -158,6 +159,19 @@ int colSize1, colSize2, colSize3;
 
 int *intArray = recv2DArrays(sock, &rowSize1, &colSize1);
 
+printf("The values of the array are \n");
+int rows,cols;
+printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
+for(rows=0;rows<rowSize1;rows++)
+{
+for(cols=0;cols<colSize1;cols++)
+{
+printf("Test");
+printf("%d",*(intArray)+((rows*colSize1)+cols));
+}
+printf("\n");
+}//end of for used for display
+
 
 }//end of counter==1
 }//end of while
@@ -170,7 +184,7 @@ return 0;
 
 
 
-int recvFromClient(int sock, int typeOfData, int *intArray, int integerToRecv, char *stringToRecv)
+int recvFromClient(int sock, int typeOfData, int *intArray, int *integerToRecv, char *stringToRecv)
 {
 /*
 basic type assumptions for this code
@@ -188,9 +202,10 @@ switch(typeOfData)
 case 1:
 	while(1)
 	{
-		int statusOfSend = recv(sock , &integerToRecv , sizeof(integerToRecv) , 0);
+		int statusOfSend = recv(sock , integerToRecv , sizeof(integerToRecv) , 0);
 		if(statusOfSend > 0)
 		{
+			printf("Got an integer %d \n",integerToRecv);
 			return 1;
 		}
 		else if(statusOfSend < 0)
@@ -242,6 +257,7 @@ int * recv2DArrays(int sock, int *rowSize, int *colSize)
 {
 
 int recvRowSizeStatus = recvFromClient(sock, 1, NULL, *rowSize, NULL);
+printf("The rowSize got is %d \n", *rowSize);
 if(recvRowSizeStatus<0)
 {
 	printf("Error in sending row size \n");
@@ -259,7 +275,7 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 	int integerArray[serializedSize];
 	int *resultPointer=integerArray;
 	
-		int statusOfArraySend = recvFromClient(sock, 2, integerArray, NULL, NULL);
+		int statusOfArraySend = recvFromClient(sock, 2, integerArray, -999, NULL);
 		if(statusOfArraySend > 0)
 		{
 		//array also has been received successfully
