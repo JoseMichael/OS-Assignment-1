@@ -18,8 +18,8 @@ Bhavin Modi
 //the thread function
 void *connection_handler(void *);
 
-int * recv2DArrays(int sock, int *rowSize, int *colSize);
-int recvFromClient(int sock, int typeOfData, int *intArray, int *integerToRecv, char *stringToRecv);
+int * recv2DArrays(int , int *, int *);
+int recvFromClient(int , int , int *, int *, char *, int);
  
 int main(int argc , char *argv[])
 {
@@ -101,7 +101,7 @@ void *connection_handler(void *socket_desc)
 
 //Counter is a depricated variable that is being kept for future use
 int counter=2;
-     
+    
     //Receive a message from client
 while(1)
 {
@@ -162,18 +162,50 @@ int *intArray = recv2DArrays(sock, &rowSize1, &colSize1);
 printf("The values of the array are \n");
 int rows,cols;
 printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
+
+
+/*
+old glitchy display code
+
 for(rows=0;rows<rowSize1;rows++)
 {
 for(cols=0;cols<colSize1;cols++)
 {
-printf("Test");
+//printf("Test");
 printf("%d",*(intArray)+((rows*colSize1)+cols));
 }
 printf("\n");
 }//end of for used for display
 
+ */
+/*
+ * 
+ * bhavins code, works with pointers but not working here
+	
+	for(rows=0;rows<rowSize1;rows++)
+	{
+	for(cols=0;cols<colSize1;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(intArray+((rows * colSize1)+cols)));
+	}
+	printf("\n");
+	}
 
-}//end of counter==1
+ */
+
+	for(rows=0;rows<rowSize1;rows++)
+	{
+	for(cols=0;cols<colSize1;cols++)
+	{
+	//printf("Test");
+	printf("%d",intArray[rows][cols]);
+	}
+	printf("\n");
+	}
+
+
+}//end of counter==2
 }//end of while
 
 //Free the socket pointer
@@ -184,7 +216,7 @@ return 0;
 
 
 
-int recvFromClient(int sock, int typeOfData, int *intArray, int *integerToRecv, char *stringToRecv)
+int recvFromClient(int sock, int typeOfData, int *intArray, int *integerToRecv, char *stringToRecv, int sizeOfData)
 {
 /*
 basic type assumptions for this code
@@ -205,7 +237,7 @@ case 1:
 		int statusOfSend = recv(sock , integerToRecv , sizeof(integerToRecv) , 0);
 		if(statusOfSend > 0)
 		{
-			printf("Got an integer %d \n",integerToRecv);
+			printf("Got an integer %d \n",*integerToRecv);
 			return 1;
 		}
 		else if(statusOfSend < 0)
@@ -218,7 +250,7 @@ break;
 case 2:
 	while(1)
 	{
-		int statusOfSend = recv(sock , intArray , sizeof(intArray) , 0);
+		int statusOfSend = recv(sock , intArray , sizeOfData , 0);
 		if(statusOfSend > 0)
 		{
 			return 1;
@@ -256,17 +288,19 @@ return 0; //this shows that there was an error in the send
 int * recv2DArrays(int sock, int *rowSize, int *colSize)
 {
 
-int recvRowSizeStatus = recvFromClient(sock, 1, NULL, *rowSize, NULL);
+int recvRowSizeStatus = recvFromClient(sock, 1, NULL, rowSize, NULL, 0);
 printf("The rowSize got is %d \n", *rowSize);
 if(recvRowSizeStatus<0)
 {
 	printf("Error in sending row size \n");
 }
-int recvColSizeStatus = recvFromClient(sock, 1, NULL, *colSize, NULL);
+int recvColSizeStatus = recvFromClient(sock, 1, NULL, colSize, NULL, 0);
 if(recvRowSizeStatus<0)
 {
 	printf("Error in sending col size \n");
 }
+
+printf("The colSize got is %d \n", *colSize);
 
 if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 {
@@ -274,12 +308,36 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 	int serializedSize = *rowSize * *colSize;
 	int integerArray[serializedSize];
 	int *resultPointer=integerArray;
-	
-		int statusOfArraySend = recvFromClient(sock, 2, integerArray, -999, NULL);
+
+	/** Dummy Pointer*/
+	int dummy = -999;
+	int *dummyPointer = &dummy;
+
+		int statusOfArraySend = recvFromClient(sock, 2, integerArray, dummyPointer, NULL, sizeof(integerArray));
 		if(statusOfArraySend > 0)
 		{
 		//array also has been received successfully
 		printf("Array received successfully \n");
+		//=================to delete, printing array=============
+		int num;
+		//for(num=0; num<serializedSize; num++)
+			printf("%d",integerArray[0]);
+printf("%d",integerArray[1]);
+printf("%d",integerArray[2]);
+printf("%d",integerArray[3]);
+		printf("\n");	
+		//======================================================
+		int rows, cols;		
+		for(rows=0;rows<*rowSize;rows++)
+		{
+		for(cols=0;cols<*colSize;cols++)
+		{
+		//printf("Test");
+		printf("%d",*(resultPointer+((rows * *colSize)+cols)));
+		}
+		printf("\n");
+		}
+
 		return resultPointer;
 		}
 		else if(statusOfArraySend < 0)
