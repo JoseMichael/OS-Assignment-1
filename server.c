@@ -18,7 +18,7 @@ Bhavin Modi
 //the thread function
 void *connection_handler(void *);
 
-int * recv2DArrays(int , int *, int *);
+void recv2DArrays(int , int *, int *, int **);
 int recvFromClient(int , int , int *, int *, char *, int);
  
 int main(int argc , char *argv[])
@@ -157,11 +157,16 @@ else if(counter==2)
 int rowSize1, rowSize2, rowSize3;
 int colSize1, colSize2, colSize3;
 
-int *intArray = recv2DArrays(sock, &rowSize1, &colSize1);
+int *trialArray;
+
+
+recv2DArrays(sock, &rowSize1, &colSize1, &trialArray);
 
 printf("The values of the array are \n");
 int rows,cols;
 printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
+
+
 
 
 /*
@@ -181,29 +186,35 @@ printf("\n");
 /*
  * 
  * bhavins code, works with pointers but not working here
-	
+ */	
 	for(rows=0;rows<rowSize1;rows++)
 	{
 	for(cols=0;cols<colSize1;cols++)
 	{
 	//printf("Test");
-	printf("%d",*(intArray+((rows * colSize1)+cols)));
+	printf("%d",*(trialArray+((rows * colSize1)+cols)));
 	}
 	printf("\n");
 	}
 
- */
 
+
+
+/*
 	for(rows=0;rows<rowSize1;rows++)
 	{
 	for(cols=0;cols<colSize1;cols++)
 	{
 	//printf("Test");
-	printf("%d",intArray[rows][cols]);
+	printf("%d",*trialArray[rows][cols]);
 	}
 	printf("\n");
 	}
 
+*/
+
+printf("Size of trialArray is %d",(int)(sizeof(trialArray)));
+free(trialArray);
 
 }//end of counter==2
 }//end of while
@@ -285,7 +296,7 @@ return 0; //this shows that there was an error in the send
 
 
 
-int * recv2DArrays(int sock, int *rowSize, int *colSize)
+void recv2DArrays(int sock, int *rowSize, int *colSize, int **integerArray)
 {
 
 int recvRowSizeStatus = recvFromClient(sock, 1, NULL, rowSize, NULL, 0);
@@ -306,14 +317,22 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 {
 //this loop is entered if both row and col size have been accepted
 	int serializedSize = *rowSize * *colSize;
-	int integerArray[serializedSize];
-	int *resultPointer=integerArray;
+	//commenting for test int integerArray[serializedSize];
+	printf("The serialized size we're getting is %d",serializedSize);
+	*integerArray = (int*)malloc(serializedSize);
+	printf("The sizeof(integerArray) we're getting is %d",(int)sizeof(integerArray));
+
+	//int *resultPointer=integerArray;
 
 	/** Dummy Pointer*/
+
+
 	int dummy = -999;
 	int *dummyPointer = &dummy;
 
-		int statusOfArraySend = recvFromClient(sock, 2, integerArray, dummyPointer, NULL, sizeof(integerArray));
+
+
+		int statusOfArraySend = recvFromClient(sock, 2, *integerArray, dummyPointer, NULL, sizeof(int)*serializedSize);
 		if(statusOfArraySend > 0)
 		{
 		//array also has been received successfully
@@ -321,10 +340,12 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 		//=================to delete, printing array=============
 		int num;
 		//for(num=0; num<serializedSize; num++)
-			printf("%d",integerArray[0]);
+			printf("%d",*integerArray[0]);
+/*
 printf("%d",integerArray[1]);
 printf("%d",integerArray[2]);
 printf("%d",integerArray[3]);
+*/
 		printf("\n");	
 		//======================================================
 		int rows, cols;		
@@ -333,12 +354,12 @@ printf("%d",integerArray[3]);
 		for(cols=0;cols<*colSize;cols++)
 		{
 		//printf("Test");
-		printf("%d",*(resultPointer+((rows * *colSize)+cols)));
+		printf("%d",*(*integerArray+((rows * *colSize)+cols)));
 		}
 		printf("\n");
 		}
 
-		return resultPointer;
+		return;
 		}
 		else if(statusOfArraySend < 0)
 		{
