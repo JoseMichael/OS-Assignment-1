@@ -54,153 +54,171 @@ int main(int argc , char *argv[])
 
 
 
-    while(1)
-    {
-     //this is the first while, it's job was to initially direct the flow to different sections of the code
-     //Now its sort of useless. Until further brain storming that is.
+    while(1){
+		//this is the first while, it's job was to initially direct the flow to different sections of the code
+	    //Now its sort of useless. Until further brain storming that is.
+		
+		if(counter==0){
 
-     if(counter==0)
-	{
-
-        printf("Enter the size of the array : ");
-        scanf("%d" , &sizeOfArray);
-        //we now create an array based on that size.
-        //Please note the scope of that array would be limited to the scope of the above "if"
-	int integerArray[sizeOfArray];
-	printf("Please enter the various array elements \n");
-	int j = 0;
-	for(j=0; j<sizeOfArray; j++)
-	{
-	//this for loop is used to take in the various elements for the array
-		scanf("%d",&integerArray[j]);
-	}
+		    printf("Enter the size of the array : ");
+		    scanf("%d" , &sizeOfArray);
+		    //we now create an array based on that size.
+		    //Please note the scope of that array would be limited to the scope of the above "if"
+			int integerArray[sizeOfArray];
+			printf("Please enter the various array elements \n");
+			int j = 0;
+		
+			for(j=0; j<sizeOfArray; j++){
+				//this for loop is used to take in the various elements for the array
+				scanf("%d",&integerArray[j]);
+			}
 
 	
-	//sending size first
-	printf("Checkpoint Inside Send ka Size ka if \n");
-	//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
-	//testing new sending function with send to server function
-	int statusOfSend = sendToServer(sock, 1, NULL, sizeOfArray, NULL, 0);
+			//sending size first
+			//printf("Checkpoint Inside Send ka Size ka if \n");
+			//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
+			//testing new sending function with send to server function
+			int statusOfSend = sendToServer(sock, 1, NULL, sizeOfArray, NULL, 0);
 
-	//int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
-		if( statusOfSend < 0)
-		{
-		    puts("Send failed");
-		    return 1;
+			//int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
+			if( statusOfSend < 0){
+				puts("Send failed");
+				return 1;
+			}
+			else if(statusOfSend>0){
+				while(1){
+					//this while is used to send the array to the server
+
+					//adding code here to send array
+					int statusOfSend2 = send(sock , integerArray , sizeof(integerArray) , 0);
+					if( statusOfSend2 < 0){
+						puts("Send failed");
+						return 1;
+					}
+					else if(statusOfSend2>0){
+						//this section is entered when the array has been sent successfully
+						//we will now have to look for the result of that operation
+
+						printf("Array has been sent \n");
+						counter = counter + 1;
+
+						//adding code here to receive the max value from the server
+						while(1){
+							//this while loop exists to receive the max value from the server
+							int statusOfRead = recv(sock , &maxValue , sizeof(maxValue),0);
+							if(statusOfRead > 0){
+								//this means the max value has been returned to the client
+								printf("The max value in the passed array was %d \n",maxValue);
+								break;
+								//this breaks from the second internal while
+							}//end of if
+						}//end of while
+
+
+						break;
+						//this is supposed to break from the internal while
+					}
+
+				}//end of while
+			}//end of else if
 		}
-		else if(statusOfSend>0)
-		{
-			while(1)
-			{
-			//this while is used to send the array to the server
+		else if(counter==1){
+			//this counter is going to be used for taking input for matrix multiplication
+			//that requires three matrices; initially coding for serializing and sending one
+			int rowA=0,columnA=0,rowB=0,columnB=0;
 
-				//adding code here to send array
-				int statusOfSend2 = send(sock , integerArray , sizeof(integerArray) , 0);
-				if( statusOfSend2 < 0)
-				{
-				    puts("Send failed");
-				    return 1;
-				}
-				else if(statusOfSend2>0)
-				{
-				//this section is entered when the array has been sent successfully
-				//we will now have to look for the result of that operation
+			printf("\nPerforming Matrix Multiplication AxB");
+			printf("\nEnter Matrix A:");
+			printf("\n\tPlease enter the number for rows: ");
+			scanf("%d",&rowA);
+			printf("\n\tPlease enter the number for columns: ");
+			scanf("%d",&columnA);
+			if(send2DMatrixToServer(sock, rowA, columnA) == 0){
+				printf("\nSend A Failed");
+				return 0;
+			}else{
+				printf("\nEnter Matrix B:");
+				printf("\n\tPlease enter the number for rows: ");
+				scanf("%d",&rowB);
+				printf("\n\tPlease enter the number for columns: ");
+				scanf("%d",&columnB);
 
-					printf("Array has been sent \n");
-					counter = counter + 1;
-
-					//adding code here to receive the max value from the server
-					while(1)
-					{
-						//this while loop exists to receive the max value from the server
-						int statusOfRead = recv(sock , &maxValue , sizeof(maxValue),0);
-						if(statusOfRead > 0)
-						{
-							//this means the max value has been returned to the client
-							printf("The max value in the passed array was %d \n",maxValue);
-							break;
-							//this breaks from the second internal while
-						}//end of if
-					}//end of while
-
-
-					break;
-					//this is supposed to break from the internal while
+				if(columnA != rowB){
+					printf("\nInvalid Parameters");
+					return 0;
 				}
 
-			}//end of while
-		}
-	}
-	else if(counter==1)
-	{
-	//this counter is going to be used for taking input for matrix multiplication
-//that requires three matrices; initially coding for serializing and sending one
+				if(send2DMatrixToServer(sock, rowB, columnB) == 0){
+					printf("\nSend B Failed");
+					return 0;
+				}else{
+					//Initilaize result array to zeroes and send it over.
+					int resultArray[rowA][columnB];
+					int rowC = 0, columnC = 0;
+					for(rowC = 0; rowC < rowA; rowC++){
+						for(columnC = 0; columnC < columnB; columnC++){
+							resultArray[rowC][columnC] = 0;
+						}
+					}
 
+					if(send2DMatrixToServer(sock, rowC, columnC) == 0){
+						printf("\nSend C Failed");
+						return 0;
+					}else{
+						//adding code here to receive the result array from the server
+						while(1){
+							//this while loop exists to receive the result array from the server
+							int resultRow = 0, resultColumn = 0;
 
-/*
-original code location of sending 2d matrix
+							int statusOfRead = recv(sock , &resultRow , sizeof(resultRow),0);
+							if(statusOfRead > 0){
+								printf("\nThe row size of result array is = %d",resultRow);
+							}else{
+								printf("\nError receiving result row.");
+								break;
+							}
 
-int noOfRows;
-int noOfCols;
-printf("Please enter the number for rows \n");
-scanf("%d ",noOfRows);
-printf("Please enter the number for columns \n");
-scanf("%d ",noOfCols);
-int serializedSize = noOfRows*noOfCols;
-int integerArray[serializedSize];
+							statusOfRead = recv(sock , &resultColumn , sizeof(resultColumn),0);
+							if(statusOfRead > 0){
+								printf("\nThe column size of result array is = %d",resultColumn);
+							}else{
+								printf("\nError receiving result column.");
+								break;
+							}
+							
+							int matrixC[resultRow][resultColumn];
+							statusOfRead = recv(sock , &matrixC , (sizeof(matrixC)/sizeof(resultRow)),0);
+							if(statusOfRead > 0){
+								printf("\nThe result array is:");
+								for(rowC = 0; rowC < resultRow; rowC++){
+									printf("\n");
+									for(columnC = 0; columnC < resultColumn; columnC++){
+										printf("%d\t",matrixC[rowC][columnC]);
+									}
+								}
+							}else{
+								printf("\nError receiving result array.");
+								break;
+							}
+						}//end of while
+					}
+				}
+			}
 
-int num=0;
-for(num=0; num<serializedSize; num++)
-{
-	scanf("%d",&integerArray[num]);
-}
-int statusOfSizeSend = sendToServer(sock, 1, NULL, serializedSize, NULL);
-if(statusOfSizeSend > 0)
-{
-	//size has been successfully sent
-	int statusOfArraySend = sendToServer(sock, 2, integerArray, NULL, NULL);
-	if(statusOfArraySend > 0)
-	{
-	//array also has been sent successfully
-	}
-	else if(statusOfArraySend < 0)
-	{
-		printf("Array send failed \n");
-	}
+			
+		}//end of else if
+      
+	}//end of while
 
-
-}
-else if(statusOfSizeSend < 0)
-{
-	printf("Size send failed \n");
-}
-
-*/
-int statusOf2DMatrixSend = send2DMatrixToServer(sock);
-
-
-	}//end of else if
-      }//end of while
-
-         
-
-    
-     
     close(sock);
     return 0;
 }
 
-int send2DMatrixToServer(int sock)
+int send2DMatrixToServer(int sock, int row, int column)
 {
-	int noOfRows;
-	int noOfCols;
-	printf("Please enter the number for rows \n");
-	scanf("%d",&noOfRows);
-	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, noOfRows, NULL, 0);
-	printf("Please enter the number for columns \n");
-	scanf("%d",&noOfCols);
-	int statusOfColSizeSend = sendToServer(sock, 1, NULL, noOfCols, NULL, 0);
-	int serializedSize = noOfRows*noOfCols;
+	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, row, NULL, 0);
+	int statusOfColSizeSend = sendToServer(sock, 1, NULL, column, NULL, 0);
+	int serializedSize = row*column;
 	int integerArray[serializedSize];
 
 	printf("Please enter the values for the array");
@@ -210,9 +228,9 @@ int send2DMatrixToServer(int sock)
 		scanf("%d",&integerArray[num]);
 	}
 
-printf("Serialized size is %d \n",serializedSize);
-
-printf("Size of array is %d \n",(int)(sizeof(integerArray)));
+	printf("Serialized size is %d \n",serializedSize);
+	
+	printf("Size of array is %d \n",(int)(sizeof(integerArray)));
 
 
 	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
@@ -237,11 +255,11 @@ printf("Size of array is %d \n",(int)(sizeof(integerArray)));
 
 	
 
-}//end of if with row and col size
-else
-{
-	printf("Error in sending row and col size \n");
-}
+	}//end of if with row and col size
+	else
+	{
+		printf("Error in sending row and col size \n");
+	}
 
 }//end of function
 
