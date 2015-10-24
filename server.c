@@ -100,7 +100,7 @@ void *connection_handler(void *socket_desc)
 	int **testarray;
 
 //Counter is a depricated variable that is being kept for future use
-int counter=2;
+int counter=3;
     
     //Receive a message from client
 while(1)
@@ -157,48 +157,89 @@ else if(counter==2)
 int rowSize1, rowSize2, rowSize3;
 int colSize1, colSize2, colSize3;
 
-int *trialArray;
+int *matrix1, *matrix2, *matrix3;
 
 
-recv2DArrays(sock, &rowSize1, &colSize1, &trialArray);
+recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+
+recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
+
+recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
+
 
 printf("The values of the array are \n");
 int rows,cols;
 printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
 
+printf("Matrix 1 \n");
 
-
-
-/*
-old glitchy display code
-
-for(rows=0;rows<rowSize1;rows++)
-{
-for(cols=0;cols<colSize1;cols++)
-{
-//printf("Test");
-printf("%d",*(intArray)+((rows*colSize1)+cols));
-}
-printf("\n");
-}//end of for used for display
-
- */
-/*
- * 
- * bhavins code, works with pointers but not working here
- */	
+//Code used to display the matrix
+/* */
 	for(rows=0;rows<rowSize1;rows++)
 	{
 	for(cols=0;cols<colSize1;cols++)
 	{
 	//printf("Test");
-	printf("%d",*(trialArray+((rows * colSize1)+cols)));
+	printf("%d",*(matrix1+((rows * colSize1)+cols)));
 	}
 	printf("\n");
 	}
 
+printf("Matrix 2 \n");
+
+//Code used to display the matrix
+/* */
+	for(rows=0;rows<rowSize2;rows++)
+	{
+	for(cols=0;cols<colSize2;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix2+((rows * colSize2)+cols)));
+	}
+	printf("\n");
+	}
+	
 
 
+printf("Matrix 3 \n");
+
+//Code used to display the matrix
+
+	for(rows=0;rows<rowSize3;rows++)
+	{
+	for(cols=0;cols<colSize3;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix3+((rows * colSize3)+cols)));
+	}
+	printf("\n");
+	}
+	
+	
+	
+	//printf("Babe just gonna get into multiply \n");
+
+multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
+
+printf("See matrix 3 after calculation \n");
+//Code used to display the matrix
+/* */
+	for(rows=0;rows<rowSize3;rows++)
+	{
+	for(cols=0;cols<colSize3;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix3+((rows * colSize3)+cols)));
+	}
+	printf("\n");
+	}
+
+int sendStatusOfMultipliedMatrix = send2DMatrixToClient(sock, rowSize3, colSize3, matrix3);
+
+if(sendStatusOfMultipliedMatrix==1)
+{
+	printf("Muliplied Array sent successfully \n");
+}
 
 /*
 	for(rows=0;rows<rowSize1;rows++)
@@ -213,10 +254,30 @@ printf("\n");
 
 */
 
-printf("Size of trialArray is %d",(int)(sizeof(trialArray)));
-free(trialArray);
+//printf("Size of trialArray is %d",(int)(sizeof(trialArray)));
+//free(trialArray);
 
 }//end of counter==2
+else if(counter==3)
+{
+	char string[2048];
+	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
+	if(status==1)
+	{
+		//printf("Yo got that string shit \n");
+		printf("The string received is %s \n",string);
+		
+		int wordCountResult = wc(string);
+		printf("The number of words in that sentence are %d \n",wordCountResult);
+		
+		int statusOfWordCountToClient =  sendToClient( sock, 1, NULL, wordCountResult, NULL, sizeof(int));
+		if(statusOfWordCountToClient>0)
+		{
+			printf("Word count sent \n");
+		}
+		
+	}
+}
 }//end of while
 
 //Free the socket pointer
@@ -224,6 +285,62 @@ free(socket_desc);
 
 return 0;
 }
+
+
+int send2DMatrixToClient(int sock, int row, int column, int *integerArray)
+{
+	int statusOfRowSizeSend = sendToClient(sock, 1, NULL, row, NULL, 0);
+	int statusOfColSizeSend = sendToClient(sock, 1, NULL, column, NULL, 0);
+	int serializedSize = row*column;
+
+
+	printf("Serialized size is %d \n",serializedSize);
+	
+	printf("Size of array is %d \n",(int)(sizeof(integerArray)));
+
+
+	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
+	{
+
+		//size has been successfully sent
+		int statusOfArraySend = sendToClient(sock, 2, integerArray, -999, NULL, sizeof(int)*serializedSize);
+		if(statusOfArraySend > 0)
+		{
+		//array also has been sent successfully
+		printf("Array has been sent successfully \n");
+		
+		//============to del=========================
+		int rows,cols;
+		
+		printf("Displaying array that has been sent \n");
+
+		for(rows=0;rows<row;rows++)
+		{
+		for(cols=0;cols<column;cols++)
+		{
+		//printf("Test");
+		printf("%d",*(integerArray+((rows * column)+cols)));
+		}
+		printf("\n");
+		}
+		//=============================================
+
+	
+		return 1;
+		}
+		else if(statusOfArraySend < 0)
+		{
+			printf("Array send failed \n");
+			return 0;
+		}
+
+	}//end of if with row and col size
+	else
+	{
+		printf("Error in sending row and col size \n");
+	}
+
+}//end of function
 
 
 
@@ -275,10 +392,12 @@ break;
 
 case 3:
 	while(1)
-	{
-		int statusOfSend = recv(sock , stringToRecv , sizeof(stringToRecv) , 0);
+	{	
+		//printf("Size of string being received is %d \n",(int)sizeof(stringToRecv));
+		int statusOfSend = recv(sock , stringToRecv , sizeof(char)*2048 , 0);
 		if(statusOfSend > 0)
 		{
+			//printf("Yo got that string bae \n");
 			return 1;
 		}
 		else if(statusOfSend < 0)
@@ -291,6 +410,7 @@ break;
 
 return 0; //this shows that there was an error in the send
 }//end of function
+
 
 
 
@@ -371,4 +491,69 @@ printf("%d",integerArray[3]);
 
 
 
+}//end of function
+
+int sendToClient(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend, int sizeOfData)
+{
+/*
+basic type assumptions for this code
+1. Integer
+2. 1D Array
+3. String
+
+Also note any value that is not needed for sending that type would be set to null
+
+*/
+
+switch(typeOfData)
+{
+
+case 1:
+	while(1)
+	{
+		int statusOfSend = send(sock , &integerToSend , sizeof(integerToSend) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 2:
+	while(1)
+	{
+		int statusOfSend = send(sock , intArray , sizeOfData , 0);
+		if(statusOfSend > 0)
+		{
+			printf("Size of the array being sent is %d \n",sizeOfData);
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+
+case 3:
+	while(1)
+	{
+		int statusOfSend = send(sock , stringToSend , sizeof(stringToSend) , 0);
+		if(statusOfSend > 0)
+		{
+			return 1;
+		}
+		else if(statusOfSend < 0)
+		{
+			break; //breaks from the while
+		}
+	}//end of while
+break;
+}//end of switch
+
+return 0; //this shows that there was an error in the send
 }//end of function

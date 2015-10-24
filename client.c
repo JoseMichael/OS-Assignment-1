@@ -205,17 +205,29 @@ int main(int argc , char *argv[])
 								break;
 							}
 							
-							int matrixC[resultRow][resultColumn];
+							int matrixC[resultRow*resultColumn];
 							int rowC = 0, columnC = 0;
-							statusOfRead = recv(sock , &matrixC , (sizeof(matrixC)/sizeof(resultRow)),0);
+							statusOfRead = recv(sock , &matrixC , sizeof(int)*resultRow*resultColumn,0);
 							if(statusOfRead > 0){
-								for(rowC = 0; rowC < resultRow; rowC++){
-									printf("\n");
-									for(columnC = 0; columnC < resultColumn; columnC++){
-										printf("%d\t",matrixC[rowC][columnC]);
-									}
+									
+									
+								int rows,cols;
+								
+								int *matrix3 = matrixC;
+	
+								for(rows=0;rows<resultRow;rows++)
+								{
+								for(cols=0;cols<resultColumn;cols++)
+								{
+								//printf("Test");
+								printf("%d",*(matrix3+((rows * resultColumn)+cols)));
 								}
-							}else{
+								printf("\n");
+								}
+									
+								}//end of if(statusOfRead > 0)
+								
+							else{
 								printf("\nError receiving result array.");
 								break;
 							}
@@ -239,7 +251,8 @@ int main(int argc , char *argv[])
 				}				
 			}
 			
-			int status = sendToServer(sock, 3, NULL, 0, string, 2048);
+			printf("Checkpoint before sendToServer \n");
+			int status = sendToServer(sock, 3, NULL, 0, string, sizeof(char)*2048);
 			if(status < 0){
 				printf("\nFailed");
 				break;
