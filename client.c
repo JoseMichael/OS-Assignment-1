@@ -133,7 +133,16 @@ int main(int argc , char *argv[])
 			scanf("%d",&rowA);
 			printf("\n\tPlease enter the number for columns: ");
 			scanf("%d",&columnA);
-			if(send2DMatrixToServer(sock, rowA, columnA) == 0){
+			
+			int serializedSize = rowA*columnA;
+			int integerArrayA[serializedSize];
+			printf("\n\tPlease enter the values for the array:\n");
+			int num=0;
+			for(num=0; num<serializedSize; num++){
+				scanf("%d",&integerArrayA[num]);
+			}
+
+			if(send2DMatrixToServer(sock, integerArrayA, rowA, columnA) == 0){
 				printf("\nSend A Failed");
 				return 0;
 			}else{
@@ -148,20 +157,28 @@ int main(int argc , char *argv[])
 					return 0;
 				}
 
-				if(send2DMatrixToServer(sock, rowB, columnB) == 0){
+				serializedSize = rowB*columnB;
+				int integerArrayB[serializedSize];
+				printf("\n\tPlease enter the values for the array:\n");
+				num=0;
+				for(num=0; num<serializedSize; num++){
+					scanf("%d",&integerArrayB[num]);
+				}
+	
+				if(send2DMatrixToServer(sock, integerArrayB, rowB, columnB) == 0){
 					printf("\nSend B Failed");
 					return 0;
 				}else{
 					//Initilaize result array to zeroes and send it over.
-					int resultArray[rowA][columnB];
-					int rowC = 0, columnC = 0;
-					for(rowC = 0; rowC < rowA; rowC++){
-						for(columnC = 0; columnC < columnB; columnC++){
-							resultArray[rowC][columnC] = 0;
-						}
+					serializedSize = rowA*columnB;
+					int integerArrayC[serializedSize];
+					printf("\n\tPlease enter the values for the array:\n");
+					num=0;
+					for(num=0; num<serializedSize; num++){
+						integerArrayC[num] = 0;
 					}
 
-					if(send2DMatrixToServer(sock, rowC, columnC) == 0){
+					if(send2DMatrixToServer(sock, integerArrayC, rowA, columnB) == 0){
 						printf("\nSend C Failed");
 						return 0;
 					}else{
@@ -187,6 +204,7 @@ int main(int argc , char *argv[])
 							}
 							
 							int matrixC[resultRow][resultColumn];
+							int rowC = 0, columnC = 0;
 							statusOfRead = recv(sock , &matrixC , (sizeof(matrixC)/sizeof(resultRow)),0);
 							if(statusOfRead > 0){
 								printf("\nThe result array is:");
@@ -214,25 +232,11 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-int send2DMatrixToServer(int sock, int row, int column)
+int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 {
 	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, row, NULL, 0);
 	int statusOfColSizeSend = sendToServer(sock, 1, NULL, column, NULL, 0);
-	int serializedSize = row*column;
-	int integerArray[serializedSize];
-
-	printf("Please enter the values for the array");
-	int num=0;
-	for(num=0; num<serializedSize; num++)
-	{
-		scanf("%d",&integerArray[num]);
-	}
-
-	printf("Serialized size is %d \n",serializedSize);
 	
-	printf("Size of array is %d \n",(int)(sizeof(integerArray)));
-
-
 	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
 	{
 
