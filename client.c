@@ -11,7 +11,7 @@ Bhavin Modi
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 
-int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend); 
+int sendToServer(int, int, int *, int, char *, int); 
  
 int main(int argc , char *argv[])
 {
@@ -80,7 +80,7 @@ int main(int argc , char *argv[])
 	printf("Checkpoint Inside Send ka Size ka if \n");
 	//int statusOfSend = send(sock , &sizeOfArray , sizeof(sizeOfArray) , 0);
 	//testing new sending function with send to server function
-	int statusOfSend = sendToServer(sock, 1, NULL, sizeOfArray, NULL);
+	int statusOfSend = sendToServer(sock, 1, NULL, sizeOfArray, NULL, 0);
 
 	//int statusOfSend = send(sock , &valToTestAndDiscard , sizeof(valToTestAndDiscard) , 0);
 		if( statusOfSend < 0)
@@ -196,8 +196,10 @@ int send2DMatrixToServer(int sock)
 	int noOfCols;
 	printf("Please enter the number for rows \n");
 	scanf("%d",&noOfRows);
+	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, noOfRows, NULL, 0);
 	printf("Please enter the number for columns \n");
 	scanf("%d",&noOfCols);
+	int statusOfColSizeSend = sendToServer(sock, 1, NULL, noOfCols, NULL, 0);
 	int serializedSize = noOfRows*noOfCols;
 	int integerArray[serializedSize];
 
@@ -208,8 +210,10 @@ int send2DMatrixToServer(int sock)
 		scanf("%d",&integerArray[num]);
 	}
 
-	int statusOfRowSizeSend = sendToServer(sock, 1, NULL, noOfRows, NULL);
-	int statusOfColSizeSend = sendToServer(sock, 1, NULL, noOfCols, NULL);
+printf("Serialized size is %d \n",serializedSize);
+
+printf("Size of array is %d \n",(int)(sizeof(integerArray)));
+
 
 	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
 	{
@@ -217,7 +221,7 @@ int send2DMatrixToServer(int sock)
 
 	
 		//size has been successfully sent
-		int statusOfArraySend = sendToServer(sock, 2, integerArray, -999, NULL);
+		int statusOfArraySend = sendToServer(sock, 2, integerArray, -999, NULL, sizeof(integerArray));
 		if(statusOfArraySend > 0)
 		{
 		//array also has been sent successfully
@@ -241,7 +245,7 @@ else
 
 }//end of function
 
-int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend)
+int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend, int sizeOfData)
 {
 /*
 basic type assumptions for this code
@@ -274,9 +278,10 @@ break;
 case 2:
 	while(1)
 	{
-		int statusOfSend = send(sock , intArray , sizeof(intArray) , 0);
+		int statusOfSend = send(sock , intArray , sizeOfData , 0);
 		if(statusOfSend > 0)
 		{
+			printf("Size of the array being sent is %d \n",sizeOfData);
 			return 1;
 		}
 		else if(statusOfSend < 0)
