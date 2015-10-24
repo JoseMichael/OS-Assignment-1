@@ -48,7 +48,7 @@ int main(int argc , char *argv[])
 //In my mind this could be something useful that helps us toggle between different input
 //methods when we take in different data types. Will have to think more on it
 //---------------------------------------------------------
-    int counter = 1;
+    int counter = 2;
 
     //keep communicating with server
 
@@ -224,11 +224,37 @@ int main(int argc , char *argv[])
 				}
 			}
 		}//end of else if
-		else if(counter==1){
+		else if(counter==2){
 			//Sending a string across
-			//char string[3];
-			//printf("\nEnter anything:");
-			//scanf("%s",&string);
+			char string[2048];
+			printf("\nEnter anything:");
+			fgets(string, 2048, stdin);
+			printf("%s",string);
+
+			int index = 0;
+			for(index = 0; index < 2048; index++){
+				if(string[index] == '\n'){
+					string[index] = '\0';
+					break;
+				}				
+			}
+			
+			int status = sendToServer(sock, 3, NULL, 0, string, 2048);
+			if(status < 0){
+				printf("\nFailed");
+				break;
+			}else{
+				int numWords = 0;
+				int statusOfStringRead = recv(sock , &numWords , sizeof(numWords),0);
+				if(statusOfStringRead > 0){
+					printf("\nNumber of words = %d",numWords);
+					break;
+				}else{
+					printf("\nError receiving number of words.");
+					break;
+				}
+			}
+			break;
 		}
       
 	}//end of while
@@ -329,7 +355,8 @@ break;
 case 3:
 	while(1)
 	{
-		int statusOfSend = send(sock , stringToSend , sizeof(stringToSend) , 0);
+		int statusOfSend = send(sock , stringToSend , sizeOfData , 0);
+
 		if(statusOfSend > 0)
 		{
 			return 1;
