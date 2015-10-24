@@ -1,3 +1,5 @@
+//server copy before indent that had the menu implemented
+
 /*
 
 Operating Systems Project 1
@@ -100,12 +102,28 @@ void *connection_handler(void *socket_desc)
 	int **testarray;
 
 //Counter is a depricated variable that is being kept for future use
-int counter=3;
+int counter=0;
     
     //Receive a message from client
+    
 while(1)
 {
-if(counter==1)
+    
+while(1)
+{
+	
+	//initializing new while to look for counter value
+	int statusOfCounterRecv = recvFromClient(sock, 1, NULL, &counter, NULL, (int)sizeof(int));
+	if(statusOfCounterRecv>0)
+	{
+		printf("Counter value successfully received and is %d \n",counter);
+		break; //breaks from outer while loop
+	}
+	
+}
+	
+	
+if(counter==0)
 {
 	//code to read the size of the array that will be sent
 	read_size = recv(sock , &testvar , sizeof(testvar) , 0);
@@ -151,7 +169,7 @@ if(counter==1)
 		perror("recv failed");
 	}
 }//end of if counter==0
-else if(counter==2)
+else if(counter==1)
 {
 
 int rowSize1, rowSize2, rowSize3;
@@ -174,7 +192,7 @@ printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
 printf("Matrix 1 \n");
 
 //Code used to display the matrix
-/* */
+
 	for(rows=0;rows<rowSize1;rows++)
 	{
 	for(cols=0;cols<colSize1;cols++)
@@ -241,24 +259,9 @@ if(sendStatusOfMultipliedMatrix==1)
 	printf("Muliplied Array sent successfully \n");
 }
 
-/*
-	for(rows=0;rows<rowSize1;rows++)
-	{
-	for(cols=0;cols<colSize1;cols++)
-	{
-	//printf("Test");
-	printf("%d",*trialArray[rows][cols]);
-	}
-	printf("\n");
-	}
-
-*/
-
-//printf("Size of trialArray is %d",(int)(sizeof(trialArray)));
-//free(trialArray);
 
 }//end of counter==2
-else if(counter==3)
+else if(counter==2)
 {
 	char string[2048];
 	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
@@ -309,23 +312,6 @@ int send2DMatrixToClient(int sock, int row, int column, int *integerArray)
 		//array also has been sent successfully
 		printf("Array has been sent successfully \n");
 		
-		//============to del=========================
-		int rows,cols;
-		
-		printf("Displaying array that has been sent \n");
-
-		for(rows=0;rows<row;rows++)
-		{
-		for(cols=0;cols<column;cols++)
-		{
-		//printf("Test");
-		printf("%d",*(integerArray+((rows * column)+cols)));
-		}
-		printf("\n");
-		}
-		//=============================================
-
-	
 		return 1;
 		}
 		else if(statusOfArraySend < 0)
@@ -412,10 +398,6 @@ return 0; //this shows that there was an error in the send
 }//end of function
 
 
-
-
-
-
 void recv2DArrays(int sock, int *rowSize, int *colSize, int **integerArray)
 {
 
@@ -457,28 +439,6 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 		{
 		//array also has been received successfully
 		printf("Array received successfully \n");
-		//=================to delete, printing array=============
-		int num;
-		//for(num=0; num<serializedSize; num++)
-			printf("%d",*integerArray[0]);
-/*
-printf("%d",integerArray[1]);
-printf("%d",integerArray[2]);
-printf("%d",integerArray[3]);
-*/
-		printf("\n");	
-		//======================================================
-		int rows, cols;		
-		for(rows=0;rows<*rowSize;rows++)
-		{
-		for(cols=0;cols<*colSize;cols++)
-		{
-		//printf("Test");
-		printf("%d",*(*integerArray+((rows * *colSize)+cols)));
-		}
-		printf("\n");
-		}
-
 		return;
 		}
 		else if(statusOfArraySend < 0)

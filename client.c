@@ -48,7 +48,8 @@ int main(int argc , char *argv[])
 //In my mind this could be something useful that helps us toggle between different input
 //methods when we take in different data types. Will have to think more on it
 //---------------------------------------------------------
-    int counter = 2;
+    int counter = -9;
+    int maxNoOfFunctions = 2;
 
     //keep communicating with server
 
@@ -57,6 +58,28 @@ int main(int argc , char *argv[])
     while(1){
 		//this is the first while, it's job was to initially direct the flow to different sections of the code
 	    //Now its sort of useless. Until further brain storming that is.
+	    
+	    while(1)
+	    {
+	    	printf("Please enter the option you want to choose \n");
+	    	printf("0. Max \n");
+	    	printf("1. Matrix Multiplication \n");
+	    	printf("2. Word count\n");
+	    	scanf("%d",&counter);
+	    	if(counter<0||counter>maxNoOfFunctions)
+	    	{
+	    		printf("Error wrong value entered \n");
+	    	}
+	    	else
+	    	{
+	    		int statusOfCounterSend = sendToServer(sock, 1, NULL, counter, NULL, 0);
+	    		if(statusOfCounterSend>0)
+	    		{
+	    			printf("Counter successfully sent \n");
+	    			break; //breaks from while loop
+	    		}
+	    	}
+	    }
 		
 		if(counter==0){
 
@@ -198,7 +221,7 @@ int main(int argc , char *argv[])
 
 							statusOfRead = recv(sock , &resultColumn , sizeof(resultColumn),0);
 							if(statusOfRead > 0){
-								printf("\nThe column size of result array is = %d",resultColumn);
+								printf("\nThe column size of result array is = %d \n",resultColumn);
 							}else{
 								printf("\nError receiving result column.");
 								printf("\nThe result array is:");
@@ -213,7 +236,7 @@ int main(int argc , char *argv[])
 									
 								int rows,cols;
 								
-								int *matrix3 = matrixC;
+								int *matrix3 = matrixC;								
 	
 								for(rows=0;rows<resultRow;rows++)
 								{
@@ -224,7 +247,12 @@ int main(int argc , char *argv[])
 								}
 								printf("\n");
 								}
+								
+								
 									
+									
+								printf("End of array display \n");
+								break;
 								}//end of if(statusOfRead > 0)
 								
 							else{
@@ -232,14 +260,23 @@ int main(int argc , char *argv[])
 								break;
 							}
 						}//end of while
+
 					}
+
 				}
+
 			}
+
 		}//end of else if
 		else if(counter==2){
+			//this counter is used for word count
 			//Sending a string across
 			char string[2048];
-			printf("\nEnter anything:");
+			printf("\n Enter anything:");
+			
+			int c;
+			while ((c = getchar()) != '\n' && c != EOF);
+			
 			fgets(string, 2048, stdin);
 			printf("%s",string);
 
@@ -260,14 +297,14 @@ int main(int argc , char *argv[])
 				int numWords = 0;
 				int statusOfStringRead = recv(sock , &numWords , sizeof(numWords),0);
 				if(statusOfStringRead > 0){
-					printf("\nNumber of words = %d",numWords);
-					break;
+					printf("\nNumber of words = %d \n",numWords);
+					
 				}else{
 					printf("\nError receiving number of words.");
-					break;
+					
 				}
 			}
-			break;
+			
 		}
       
 	}//end of while
