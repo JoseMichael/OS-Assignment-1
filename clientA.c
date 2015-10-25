@@ -100,6 +100,28 @@ int input(){
 			}
 			break;
 		case 4:
+			{
+				int size, i;
+
+				puts("Performing sorting operation");
+				puts("\tEnter the array size:");
+				scanf("%d" , &size);
+
+				int array[size];
+				puts("\tEnter the array elements:\n");
+				for(i = 0; i < size; i++){
+					scanf("%d",&array[i]);
+				}
+				
+				int *result = sort(size, array);
+				if(result == NULL){
+					return -1;
+				}
+				puts("The sorted array is:");
+				for(i = 0; i < size; i++){
+					printf("\t%d",*(result+i));
+				}
+			}
 			break;
 		case 5:
 			{

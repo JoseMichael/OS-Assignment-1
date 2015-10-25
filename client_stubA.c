@@ -184,56 +184,143 @@ int wc(char string[]){
 }
 
 int max(int size, int *intarray){
-	int statusOfSend, statusOfRead, maxVal;
+	int statusOfSend, statusOfRead, maxVal, ack;
 
 	//Sending size
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return 0;
-	}else{
-		statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
-		if(statusOfSend < 0){
-			puts("Send failed");
+	}
+
+	//Wait for Ack
+	while(1){
+		statusOfRead = recv(sock , &ack , sizeof(int),0);
+		if(!(statusOfRead > 0)){
+			//Failure break
 			return 0;
-		}else{
-			//Wait to receive max value
-			while(1){
-				statusOfRead = recv(sock , &maxVal , sizeof(maxVal),0);
-				if(statusOfRead > 0){
-					return maxVal;
-				}else{
-					puts("Receive failed");
-					return -1;
-				}
+		}
+	}
+
+	//Check Ack
+	if(ack == 0){
+		//Failure break
+		return 0;
+	}
+	
+	statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return 0;
+	}else{
+		//Wait to receive max value
+		while(1){
+			statusOfRead = recv(sock , &maxVal , sizeof(maxVal),0);
+			if(statusOfRead > 0){
+				return maxVal;
+			}else{
+				puts("Receive failed");
+				return -1;
 			}
 		}
 	}
 }
 
 int min(int size, int *intarray){
-	int statusOfSend, statusOfRead, minVal;
+	int statusOfSend, statusOfRead, minVal, ack;
 
 	//Sending size
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return 0;
-	}else{
-		statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
-		if(statusOfSend < 0){
-			puts("Send failed");
+	}
+
+	//Wait for Ack
+	while(1){
+		statusOfRead = recv(sock , &ack , sizeof(int),0);
+		if(!(statusOfRead > 0)){
+			//Failure break
 			return 0;
-		}else{
-			//Wait to receive min value
-			while(1){
-				statusOfRead = recv(sock , &minVal , sizeof(minVal),0);
-				if(statusOfRead > 0){
-					return minVal;
-				}else{
-					puts("Receive failed");
-					return -1;
-				}
+		}
+	}
+
+	//Check Ack
+	if(ack == 0){
+		//Failure break
+		return 0;
+	}
+
+	statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return 0;
+	}else{
+		//Wait to receive min value
+		while(1){
+			statusOfRead = recv(sock , &minVal , sizeof(minVal),0);
+			if(statusOfRead > 0){
+				return minVal;
+			}else{
+				puts("Receive failed");
+				return -1;
+			}
+		}
+	}
+}
+
+int * sort(int size, int* intarray){
+	int statusOfSend, statusOfRead, ack;
+
+	//Sending size
+	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return NULL;
+	}
+
+	//Wait for Ack
+	while(1){
+		statusOfRead = recv(sock, &ack, sizeof(int), 0);
+		if(!(statusOfRead > 0)){
+			//Failure break
+			return NULL;
+		}
+	}
+
+	//Check Ack
+	if(ack == 0){
+		//Failure break
+		return NULL;
+	}
+
+	statusOfSend = send(sock, intarray, sizeof(intarray), 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return NULL;
+	}else{
+		//Accept result array and assign a pointer
+		while(1){
+			//this while loop exists to receive the result array from the server
+			int resultSize = 0, statusOfRead;
+
+			statusOfRead = recv(sock , &resultSize , sizeof(resultSize),0);
+			if(statusOfRead > 0){
+				printf("The size of the result array is = %d",resultSize);
+			}else{
+				puts("Error receiving result size.");
+				return NULL;
+			}
+
+			int result[resultSize];
+			int *p = &result[0];
+			statusOfRead = recv(sock , p , sizeof(int)*resultSize,0);
+			if(statusOfRead > 0){	
+				return p;	
+			}
+			else{
+				puts("Error receiving result array.");
+				return NULL;
 			}
 		}
 	}
