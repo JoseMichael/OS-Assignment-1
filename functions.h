@@ -11,4 +11,6 @@ void quicksort(int* array, int low, int high);
 
 int * sort(int size, int* array);
 
+int input();
+
 #endif // FUNCTIONS_H_
