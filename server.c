@@ -364,7 +364,7 @@ else if(counter==4)
 					printf("%d \n",sortedArray[i]);
 				}
 				
-				
+				int statusOfSizeSend = sendToClient(sock, 1, NULL, sizeOfArray, NULL, 0);
 				//printf used to test code -- 
 				//printf("The min value in that array was %d \n", minValueInTheArray);
 				//writing the result back to the client
@@ -412,7 +412,7 @@ int send2DMatrixToClient(int sock, int row, int column, int *integerArray)
 
 	if(statusOfRowSizeSend>0 && statusOfColSizeSend>0)
 	{
-
+		
 		//size has been successfully sent
 		int statusOfArraySend = sendToClient(sock, 2, integerArray, -999, NULL, sizeof(int)*serializedSize);
 		if(statusOfArraySend > 0)
