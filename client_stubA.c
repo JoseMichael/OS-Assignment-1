@@ -6,6 +6,38 @@
 //Globals
 int sock;
 
+int sendFunctionIdentifier(int identity){
+	int statusOfSend, statusOfRead, ack;
+
+	//Send the unique function identifier
+	puts("Sending function identifier");
+	statusOfSend = sendToServer(sock, 1, NULL, identity, NULL, 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return -1;
+	}
+
+	//Wait for Ack
+	while(1){
+		statusOfRead = recv(sock , &ack , sizeof(int),0);
+		if(!(statusOfRead > 0)){
+			//Failure break
+			return -1;
+		}else{
+			//Got Ack
+			break;
+		}
+	}
+
+	//Check Ack
+	if(ack == 0){
+		//Failure break
+		return -1;
+	}
+	
+	return 0;
+}
+
 int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 {
 	//Declare variables
@@ -24,6 +56,9 @@ int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 		if(!(statusOfReceive > 0)){
 			//Failure break
 			return 0;
+		}else{
+			//Got ACK
+			break;
 		}
 	}
 	
@@ -46,6 +81,9 @@ int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 		if(!(statusOfReceive > 0)){
 			//Failure break
 			return 0;
+		}else{
+			//Got ACK
+			break;
 		}
 	}
 
@@ -120,6 +158,12 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 }//end of function
 
 void multiply(int *a, int *b, int n, int m, int l, int *c){
+	
+	if(sendFunctionIdentifier(3) == -1){
+		puts("Sending Function Identifier Failed");
+		return;
+	}
+
 	if(send2DMatrixToServer(sock, a, n, m) == 0){
 		puts("Mulitplication failed");
 		return;
@@ -164,6 +208,12 @@ void multiply(int *a, int *b, int n, int m, int l, int *c){
 }
 
 int wc(char string[]){
+
+	if(sendFunctionIdentifier(5) == -1){
+		puts("Sending Function Identifier Failed");
+		return -1;
+	}
+
 	int status = sendToServer(sock, 3, NULL, 0, string, sizeof(char)*2048);
 	if(status < 0){
 		printf("\nFailed");
@@ -186,7 +236,13 @@ int wc(char string[]){
 int max(int size, int *intarray){
 	int statusOfSend, statusOfRead, maxVal, ack;
 
+	if(sendFunctionIdentifier(1) == -1){
+		puts("Sending Function Identifier Failed");
+		return 0;
+	}
+
 	//Sending size
+	puts("Sending Array Size");
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
@@ -194,29 +250,37 @@ int max(int size, int *intarray){
 	}
 
 	//Wait for Ack
+	puts("Waiting for ACK");
 	while(1){
 		statusOfRead = recv(sock , &ack , sizeof(int),0);
 		if(!(statusOfRead > 0)){
 			//Failure break
 			return 0;
+		}else{
+			//Got Ack
+			break;
 		}
 	}
 
 	//Check Ack
+	printf("Checking ACK = %d",ack);
 	if(ack == 0){
 		//Failure break
 		return 0;
 	}
 	
+	puts("Sending array.");
 	statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return 0;
 	}else{
 		//Wait to receive max value
+		puts("Waiting to recieve Max result.");
 		while(1){
 			statusOfRead = recv(sock , &maxVal , sizeof(maxVal),0);
 			if(statusOfRead > 0){
+				printf("Got result = %d",maxVal);
 				return maxVal;
 			}else{
 				puts("Receive failed");
@@ -229,6 +293,11 @@ int max(int size, int *intarray){
 int min(int size, int *intarray){
 	int statusOfSend, statusOfRead, minVal, ack;
 
+	if(sendFunctionIdentifier(2) == -1){
+		puts("Sending Function Identifier Failed");
+		return 0;
+	}
+	
 	//Sending size
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
@@ -242,6 +311,9 @@ int min(int size, int *intarray){
 		if(!(statusOfRead > 0)){
 			//Failure break
 			return 0;
+		}else{
+			//Got ACK
+			break;
 		}
 	}
 
@@ -272,6 +344,11 @@ int min(int size, int *intarray){
 int * sort(int size, int* intarray){
 	int statusOfSend, statusOfRead, ack;
 
+	if(sendFunctionIdentifier(4) == -1){
+		puts("Sending Function Identifier Failed");
+		return NULL;
+	}
+
 	//Sending size
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
@@ -285,6 +362,9 @@ int * sort(int size, int* intarray){
 		if(!(statusOfRead > 0)){
 			//Failure break
 			return NULL;
+		}else{
+			//Got ACK
+			break;
 		}
 	}
 
@@ -308,7 +388,7 @@ int * sort(int size, int* intarray){
 			if(statusOfRead > 0){
 				printf("The size of the result array is = %d",resultSize);
 			}else{
-				puts("Error receiving result size.");
+				puts("Error receiving result row.");
 				return NULL;
 			}
 
@@ -360,7 +440,9 @@ int main(){
 			break;
 		}
 	}
-
+	
+	puts("Connection terminated.");
+	close(sock);
 	return 0;
 }
 

@@ -30,6 +30,8 @@ int input(){
 					scanf("%d",&arr[i]);
 				}
 				
+				puts("Calling Stub Max");
+
 				maxVal = max(size, arr);
 				printf("\nThe maximum value in the array is: %d",maxVal);
 			}
@@ -113,6 +115,8 @@ int input(){
 					scanf("%d",&array[i]);
 				}
 				
+				puts("Calling Stub Sort");
+	
 				int *result = sort(size, array);
 				if(result == NULL){
 					return -1;
