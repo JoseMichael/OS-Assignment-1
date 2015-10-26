@@ -98,7 +98,7 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000];
-	int testvar=0;
+	//int testvar=0;
 	int **testarray;
 
 //Counter is a depricated variable that is being kept for future use
@@ -125,14 +125,16 @@ while(1)
 	
 if(counter==1)
 {
+	int sizeOfArray=0;
 	//code to read the size of the array that will be sent
-	read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
 	if( read_size > 0 )
 	{
 		//Send the message back to client
 
 		//adding an integer array with size got from before
-		int intArray[testvar];
+		int intArray[sizeOfArray];
 
 
 		//adding a while that will look for the array
@@ -140,14 +142,15 @@ if(counter==1)
 		while(1)
 		//this while is used to receive the array from the client
 		{
-
-			read_size = recv(sock , intArray , sizeof(intArray) , 0);
+			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
+			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
 			if(read_size > 0)
 			{
 				printf("Array received \n");
 
-				int maxValueInTheArray = max(testvar,intArray);
-				//printf used to test code -- printf("The max value in that array was %d \n", maxValueInTheArray);
+				int maxValueInTheArray = max(sizeOfArray,intArray);
+				//printf used to test code -- 
+				printf("The max value in that array was %d \n", maxValueInTheArray);
 				//writing the result back to the client
 				write(sock , &maxValueInTheArray , sizeof(maxValueInTheArray));
 
@@ -161,14 +164,10 @@ if(counter==1)
 	}//end of if
 	else if(read_size == 0)
 	{
-		puts("Client disconnected");
+		puts("Recv Failed");
 		fflush(stdout);
-	}
-	else if(read_size == -1)
-	{
-		perror("recv failed");
-	}
-}//end of if counter==0
+	}//end of else if
+}//end of if counter==1
 else if(counter==3)
 {
 
