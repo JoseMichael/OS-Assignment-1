@@ -159,7 +159,6 @@ if(counter==1)
 			}//end of if that checks if inside second while
 		}//end of while that looks for array
 
-		counter = counter + 1;
 
 	}//end of if
 	else if(read_size == 0)
@@ -279,7 +278,117 @@ else if(counter==5)
 		}
 		
 	}
-}
+}//end of if counter==5
+else if(counter==2)
+{
+		int sizeOfArray=0;
+	//code to read the size of the array that will be sent
+	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
+	if( read_size > 0 )
+	{
+		//Send the message back to client
+
+		//adding an integer array with size got from before
+		int intArray[sizeOfArray];
+
+
+		//adding a while that will look for the array
+		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
+		while(1)
+		//this while is used to receive the array from the client
+		{
+			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
+			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
+			if(read_size > 0)
+			{
+				printf("Array received \n");
+
+				int minValueInTheArray = min(sizeOfArray,intArray);
+				//printf used to test code -- 
+				printf("The min value in that array was %d \n", minValueInTheArray);
+				//writing the result back to the client
+				write(sock , &minValueInTheArray , sizeof(minValueInTheArray));
+
+				break;
+				//the break is supposed to ideally break the internal while
+			}//end of if that checks if inside second while
+		}//end of while that looks for array
+
+
+	}//end of if
+	else if(read_size == 0)
+	{
+		puts("Recv Failed");
+		fflush(stdout);
+	}//end of else if
+	
+}//end of if counter == 2
+else if(counter==4)
+{
+			int sizeOfArray=0;
+	//code to read the size of the array that will be sent
+	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
+	if( read_size > 0 )
+	{
+		//Send the message back to client
+
+		//adding an integer array with size got from before
+		int intArray[sizeOfArray];
+
+
+		//adding a while that will look for the array
+		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
+		while(1)
+		//this while is used to receive the array from the client
+		{
+			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
+			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
+			if(read_size > 0)
+			{
+				printf("Array received \n");
+				
+				int i=0;
+				printf("Printing all values of the received array \n");
+				for(i=0;i<sizeOfArray;i++)
+				{
+					printf("%d \n",intArray[i]);
+				}
+
+				int *sortedArray = sort(sizeOfArray,intArray);				
+				i=0;
+				printf("Printing all values after computation \n");
+				for(i=0;i<sizeOfArray;i++)
+				{
+					printf("%d \n",sortedArray[i]);
+				}
+				
+				
+				//printf used to test code -- 
+				//printf("The min value in that array was %d \n", minValueInTheArray);
+				//writing the result back to the client
+				int statusOfArraySend = sendToClient(sock, 2, sortedArray, -999, NULL, sizeof(int)*sizeOfArray);
+				//write(sock , sortedArray , sizeof(sortedArray));
+				if(statusOfArraySend==1)
+				{
+					printf("Array sent successfully \n");
+					break;
+				}
+				//the break is supposed to ideally break the internal while
+			}//end of if that checks if inside second while
+		}//end of while that looks for array
+
+
+	}//end of if
+	else if(read_size == 0)
+	{
+		puts("Recv Failed");
+		fflush(stdout);
+	}//end of else if
+	
+
+}//end of counter==4
 }//end of while
 
 //Free the socket pointer
