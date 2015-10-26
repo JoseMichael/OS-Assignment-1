@@ -92,6 +92,10 @@ int input(){
 
 				//Initialize the result matrix
 				int matrix3[rowA*columnB];
+				//adding Jose's code here for initializing array to 0
+				for(num=0; num<rowA*columnB; num++){
+					matrix3[num]=0;
+				}
 
 				multiply(matrix1, matrix2, rowA, columnA, columnB, matrix3);
 	
