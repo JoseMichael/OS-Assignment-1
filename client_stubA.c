@@ -34,9 +34,11 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 			while(1){
 				int statusOfSend = send(sock , intArray , sizeOfData , 0);
 				if(statusOfSend > 0){
+					printf("Inside receiver for int array and gonna break now \n");
 					break;
 				}
 				else if(statusOfSend < 0){
+					printf("Inside receiver for int array and failure and gonna return \n");
 					return -1;
 				}
 			}//end of while
@@ -64,6 +66,7 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 			//Failure break
 			return -1;
 		}else{
+			printf("Got an ACK babe \n");
 			//Got ACK
 			break;
 		}
@@ -215,7 +218,7 @@ int max(int size, int *intarray){
 	}
 	
 	puts("Sending array.");
-	statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
+	statusOfSend = sendToServer(sock , 2, intarray , -999 , NULL, sizeof(int)*size);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return 0;
@@ -250,7 +253,7 @@ int min(int size, int *intarray){
 		return 0;
 	}
 
-	statusOfSend = send(sock , intarray , sizeof(intarray) , 0);
+	statusOfSend = sendToServer(sock , 2, intarray , -999 , NULL, sizeof(int)*size);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return 0;
@@ -283,7 +286,7 @@ int * sort(int size, int* intarray){
 		return NULL;
 	}
 
-	statusOfSend = send(sock, intarray, sizeof(intarray), 0);
+	statusOfSend = sendToServer(sock , 2, intarray , -999 , NULL, sizeof(int)*size);
 	if(statusOfSend < 0){
 		puts("Send failed");
 		return NULL;
