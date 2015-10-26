@@ -118,9 +118,9 @@ int input(){
 				for(i = 0; i < size; i++){
 					scanf("%d",&array[i]);
 				}
-				
+					
 				puts("Calling Stub Sort");
-	
+
 				int *result = sort(size, array);
 				if(result == NULL){
 					return -1;

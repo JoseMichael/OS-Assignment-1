@@ -310,11 +310,9 @@ int * sort(int size, int* intarray){
 				return NULL;
 			}
 
-			int result[resultSize];
-			int *p = &result[0];
-			statusOfRead = recv(sock , p , sizeof(int)*resultSize,0);
+			statusOfRead = recv(sock , intarray, sizeof(int)*resultSize,0);
 			if(statusOfRead > 0){	
-				return p;	
+				return intarray;	
 			}
 			else{
 				puts("Error receiving result array.");
