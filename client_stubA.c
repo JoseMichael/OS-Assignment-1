@@ -6,104 +6,6 @@
 //Globals
 int sock;
 
-int sendFunctionIdentifier(int identity){
-	int statusOfSend, statusOfRead, ack;
-
-	//Send the unique function identifier
-	puts("Sending function identifier");
-	statusOfSend = sendToServer(sock, 1, NULL, identity, NULL, 0);
-	if(statusOfSend < 0){
-		puts("Send failed");
-		return -1;
-	}
-
-	//Wait for Ack
-	while(1){
-		statusOfRead = recv(sock , &ack , sizeof(int),0);
-		if(!(statusOfRead > 0)){
-			//Failure break
-			return -1;
-		}else{
-			//Got Ack
-			break;
-		}
-	}
-
-	//Check Ack
-	if(ack == 0){
-		//Failure break
-		return -1;
-	}
-	
-	return 0;
-}
-
-int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
-{
-	//Declare variables
-	int ack, statusOfSend, statusOfReceive;
-
-	//Send number of rows
-	statusOfSend = sendToServer(sock, 1, NULL, row, NULL, 0);
-	if(statusOfSend < 0){
-		//Failure break
-		return 0;
-	}
-
-	//Wait for Ack
-	while(1){
-		statusOfReceive = recv(sock , &ack , sizeof(int),0);
-		if(!(statusOfReceive > 0)){
-			//Failure break
-			return 0;
-		}else{
-			//Got ACK
-			break;
-		}
-	}
-	
-	//Check Ack
-	if(ack == 0){
-		//Failure break
-		return 0;
-	}
-
-	//Send number of columns
-	statusOfSend = sendToServer(sock, 1, NULL, column, NULL, 0);
-	if(statusOfSend < 0){
-		//Failure break
-		return 0;
-	}
-	
-	//Wait for Ack
-	while(1){
-		statusOfReceive = recv(sock , &ack , sizeof(int),0);
-		if(!(statusOfReceive > 0)){
-			//Failure break
-			return 0;
-		}else{
-			//Got ACK
-			break;
-		}
-	}
-
-	//Check Ack
-	if(ack == 0){
-		//Failure break
-		return 0;
-	}
-	
-	//size has been successfully sent
-	statusOfSend = sendToServer(sock, 2, integerArray, -999, NULL, (sizeof(int)*row*column));
-	if(statusOfSend < 0){
-		//Failure break
-		return 0;
-	}
-	
-	//Successful
-	return 1;
-}
-
 int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, char *stringToSend, int sizeOfData){
 	/*
 	basic type assumptions for this code
@@ -120,10 +22,10 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 			while(1){
 				int statusOfSend = send(sock , &integerToSend , sizeof(integerToSend) , 0);
 				if(statusOfSend > 0){
-					return 1;
+					break;
 				}
 				else if(statusOfSend < 0){
-					break; //breaks from the while
+					return -1;
 				}
 			}//end of while
 		break;
@@ -132,10 +34,10 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 			while(1){
 				int statusOfSend = send(sock , intArray , sizeOfData , 0);
 				if(statusOfSend > 0){
-					return 1;
+					break;
 				}
 				else if(statusOfSend < 0){
-					break; //breaks from the while
+					return -1;
 				}
 			}//end of while
 		break;
@@ -145,17 +47,80 @@ int sendToServer(int sock, int typeOfData, int *intArray, int integerToSend, cha
 				int statusOfSend = send(sock , stringToSend , sizeOfData , 0);
 
 				if(statusOfSend > 0){
-					return 1;
+					break;
 				}
 				else if(statusOfSend < 0){
-					break; //breaks from the while
+					return -1;
 				}
 			}//end of while
 		break;
 	}//end of switch
 
-	return 0; //this shows that there was an error in the send
+	//Wait for Ack
+	int statusOfReceive, ack;
+	while(1){
+		statusOfReceive = recv(sock , &ack , sizeof(int),0);
+		if(!(statusOfReceive > 0)){
+			//Failure break
+			return -1;
+		}else{
+			//Got ACK
+			break;
+		}
+	}
+	
+	//Check Ack
+	if(ack == 0){
+		//Failure break
+		return -1;
+	}
+
+	return 1; //this shows that send was a success
 }//end of function
+
+int sendFunctionIdentifier(int identity){
+	int statusOfSend;
+
+	//Send the unique function identifier
+	puts("Sending function identifier");
+	statusOfSend = sendToServer(sock, 1, NULL, identity, NULL, 0);
+	if(statusOfSend < 0){
+		puts("Send failed");
+		return -1;
+	}
+	
+	return 0;
+}
+
+int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
+{
+	//Declare variables
+	int statusOfSend;
+
+	//Send number of rows
+	statusOfSend = sendToServer(sock, 1, NULL, row, NULL, 0);
+	if(statusOfSend < 0){
+		//Failure break
+		return 0;
+	}
+
+	//Send number of columns
+	statusOfSend = sendToServer(sock, 1, NULL, column, NULL, 0);
+	if(statusOfSend < 0){
+		//Failure break
+		return 0;
+	}
+	
+	//size has been successfully sent
+	statusOfSend = sendToServer(sock, 2, integerArray, -999, NULL, (sizeof(int)*row*column));
+	if(statusOfSend < 0){
+		//Failure break
+		return 0;
+	}
+	
+	//Successful
+	return 1;
+}
 
 void multiply(int *a, int *b, int n, int m, int l, int *c){
 	
@@ -234,7 +199,7 @@ int wc(char string[]){
 }
 
 int max(int size, int *intarray){
-	int statusOfSend, statusOfRead, maxVal, ack;
+	int statusOfSend, statusOfRead, maxVal;
 
 	if(sendFunctionIdentifier(1) == -1){
 		puts("Sending Function Identifier Failed");
@@ -246,26 +211,6 @@ int max(int size, int *intarray){
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
-		return 0;
-	}
-
-	//Wait for Ack
-	puts("Waiting for ACK");
-	while(1){
-		statusOfRead = recv(sock , &ack , sizeof(int),0);
-		if(!(statusOfRead > 0)){
-			//Failure break
-			return 0;
-		}else{
-			//Got Ack
-			break;
-		}
-	}
-
-	//Check Ack
-	printf("Checking ACK = %d",ack);
-	if(ack == 0){
-		//Failure break
 		return 0;
 	}
 	
@@ -291,7 +236,7 @@ int max(int size, int *intarray){
 }
 
 int min(int size, int *intarray){
-	int statusOfSend, statusOfRead, minVal, ack;
+	int statusOfSend, statusOfRead, minVal;
 
 	if(sendFunctionIdentifier(2) == -1){
 		puts("Sending Function Identifier Failed");
@@ -302,24 +247,6 @@ int min(int size, int *intarray){
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
-		return 0;
-	}
-
-	//Wait for Ack
-	while(1){
-		statusOfRead = recv(sock , &ack , sizeof(int),0);
-		if(!(statusOfRead > 0)){
-			//Failure break
-			return 0;
-		}else{
-			//Got ACK
-			break;
-		}
-	}
-
-	//Check Ack
-	if(ack == 0){
-		//Failure break
 		return 0;
 	}
 
@@ -342,7 +269,7 @@ int min(int size, int *intarray){
 }
 
 int * sort(int size, int* intarray){
-	int statusOfSend, statusOfRead, ack;
+	int statusOfSend, statusOfRead;
 
 	if(sendFunctionIdentifier(4) == -1){
 		puts("Sending Function Identifier Failed");
@@ -353,24 +280,6 @@ int * sort(int size, int* intarray){
 	statusOfSend = sendToServer(sock, 1, NULL, size, NULL, 0);
 	if(statusOfSend < 0){
 		puts("Send failed");
-		return NULL;
-	}
-
-	//Wait for Ack
-	while(1){
-		statusOfRead = recv(sock, &ack, sizeof(int), 0);
-		if(!(statusOfRead > 0)){
-			//Failure break
-			return NULL;
-		}else{
-			//Got ACK
-			break;
-		}
-	}
-
-	//Check Ack
-	if(ack == 0){
-		//Failure break
 		return NULL;
 	}
 
