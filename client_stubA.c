@@ -135,44 +135,50 @@ void multiply(int *a, int *b, int n, int m, int l, int *c){
 	if(send2DMatrixToServer(sock, a, n, m) == 0){
 		puts("Mulitplication failed");
 		return;
-	}else{
-		if(send2DMatrixToServer(sock, b, m, l) == 0){
-			puts("Mulitplication failed");
-			return;
-		}else{
-			//adding code here to receive the result array from the server
-			while(1){
-				//this while loop exists to receive the result array from the server
-				int resultRow = 0, resultColumn = 0;
-
-				int statusOfRead = recv(sock , &resultRow , sizeof(resultRow),0);
-				if(statusOfRead > 0){
-					printf("The row size of result array is = %d",resultRow);
-				}else{
-					puts("Error receiving result row.");
-					break;
-				}
-
-				statusOfRead = recv(sock , &resultColumn , sizeof(resultColumn),0);
-				if(statusOfRead > 0){
-					printf("The column size of result array is = %d",resultColumn);
-				}else{
-					puts("Error receiving result column.");
-					puts("The result array is:");
-					break;
-				}
-				
-				statusOfRead = recv(sock , c , sizeof(int)*resultRow*resultColumn,0);
-				if(statusOfRead > 0){	
-					return;	
-				}//end of if(statusOfRead > 0)
-				else{
-					puts("Error receiving result array.");
-					break;
-				}
-			}//end of while
-		}
 	}
+		
+	if(send2DMatrixToServer(sock, b, m, l) == 0){
+		puts("Mulitplication failed");
+		return;
+	}
+	
+	if(send2DMatrixToServer(sock, c, n, l) == 0){
+		puts("Mulitplication failed");
+		return;
+	}
+
+	//adding code here to receive the result array from the server
+	while(1){
+		//this while loop exists to receive the result array from the server
+		int resultRow = 0, resultColumn = 0;
+
+		int statusOfRead = recv(sock , &resultRow , sizeof(resultRow),0);
+		if(statusOfRead > 0){
+			printf("The row size of result array is = %d",resultRow);
+		}else{
+			puts("Error receiving result row.");
+			break;
+		}
+
+		statusOfRead = recv(sock , &resultColumn , sizeof(resultColumn),0);
+		if(statusOfRead > 0){
+			printf("The column size of result array is = %d",resultColumn);
+		}else{
+			puts("Error receiving result column.");
+			puts("The result array is:");
+			break;
+		}
+		
+		statusOfRead = recv(sock , c , sizeof(int)*resultRow*resultColumn,0);
+		if(statusOfRead > 0){	
+			return;	
+		}//end of if(statusOfRead > 0)
+		else{
+			puts("Error receiving result array.");
+			break;
+		}
+	}//end of while
+
 }
 
 int wc(char string[]){
