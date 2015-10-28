@@ -133,6 +133,28 @@ int scanListServerDR(int ipArr[], int port){
 	}
 }
 
+struct serverNode* scanListClient(int programID, int version){
+	
+	struct serverNode *ptr = head;
+	
+	if(ptr == NULL){
+		puts("No Server Found In List");
+		return NULL;
+	}
+	while(ptr != NULL){
+		if(ptr->programID == programID){
+			if(ptr->version == version){
+				return ptr;
+			}
+		}
+		ptr = ptr->next;
+	}
+
+	//If we reach here, no server found;
+	puts("No Server Found In List");
+	return NULL;
+}
+
 int sendAck(int sock)
 {
 	int ackValue = 1, statusOfAck;
@@ -169,7 +191,7 @@ int waitForAck(int sock){
 }
 
 int registerServer(int sock, int ipArr[], int port){
-	int statusOfRead, programID, version, i, j, k;
+	int statusOfRead, programID, version;
 	
 	//Wait for Program ID
 	while(1){
@@ -235,6 +257,72 @@ int deRegisterServer(int ipArr[], int port){
 
 int runClientSetup(int sock){
 	//Look for the server with the requested service
+	int statusOfRead, programID, version, statusOfSend;
+	
+	//Wait for Program ID
+	while(1){
+		statusOfRead = recv(sock , &programID , sizeof(programID) , 0);
+		if(statusOfRead > 0){
+			break;
+		}else{
+			puts("Error receiving program ID");
+			return -1;
+		}
+	}	
+	
+	//Send Ack, to be ready fo next message
+	if(sendAck(sock) < 0){
+		puts("Sending Ack Failed");
+		return -1;
+	}
+
+	//Get the version
+	while(1){
+		statusOfRead = recv(sock , &version , sizeof(int) , 0);
+		if(statusOfRead > 0){
+			break;
+		}else{
+			puts("Error receiving program ID");
+			return -1;
+		}
+	}	
+	
+	//Send Ack, to be ready fo next message
+	if(sendAck(sock) < 0){
+		puts("Sending Ack Failed");
+		return -1;
+	}
+
+	//Find the server and send the IP and Port to the client
+	struct serverNode *ptr = scanListClient(programID, version);
+	if(ptr == NULL){	
+		puts("No Server Found");
+		return -1;
+	}else{
+		//Send the IP and Port
+		statusOfSend = send(sock, ptr->ip, sizeof(int)*4, 0);
+		if(statusOfSend < 0){
+			puts("Send IP Failed");
+			return -1;
+		}
+		
+		//Wait for ACK
+		if(waitForAck(sock) < 0){
+			puts("ACK not received");
+			return -1;
+		}
+
+		//Send Port number
+		statusOfSend = send(sock, &ptr->port, sizeof(int), 0);
+		if(statusOfSend < 0){
+			puts("Send Port Failed");
+			return -1;
+		}
+	}
+	
+	//Successful
+	puts("Client got server");
+	return 1;
 }
 
 int runServerSetup(int sock, int ipArr[]){
@@ -428,7 +516,7 @@ int main(){
         new_sock = malloc(1);
         *new_sock = client_sock;
 		
-        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , args) < 0)
+        if(pthread_create( &sniffer_thread , NULL ,  connection_handler , args) < 0)
         {
 			free(args);
             perror("could not create thread");
