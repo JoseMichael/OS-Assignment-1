@@ -1,0 +1,20 @@
+<program>
+	<id>1</id>
+	<name>serverclient</name>
+	<version>2</version>
+	<procedure>
+		<name>funct1</name>
+		<id>1</id>
+		<return>int*</return>
+		<param>
+			<name>intVal</name>
+			<index>1</index>
+			<type>int</type>
+		</param>
+		<param>
+			<name>someRandomIntName</name>
+			<index>2</index>
+			<type>int*</type>
+		</param>
+	</procedure>
+</program>
