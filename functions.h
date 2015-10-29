@@ -3,7 +3,7 @@
 
 int max(int size, int *intarray);  
 
-void multiply(int *a, int *b, int n, int m, int l, int *c);
+int * multiply(int *a, int *b, int n, int m, int l, int *c);
 
 int wc(char str[]);
 

@@ -141,26 +141,26 @@ int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 	return 1;
 }
 
-void multiply(int *a, int *b, int n, int m, int l, int *c){
+int* multiply(int *a, int *b, int n, int m, int l, int *c){
 	
 	if(sendFunctionIdentifier(3) == -1){
 		puts("Sending Function Identifier Failed");
-		return;
+		return NULL;
 	}
 
 	if(send2DMatrixToServer(sock, a, n, m) == 0){
 		puts("Mulitplication failed");
-		return;
+		return NULL;
 	}
 		
 	if(send2DMatrixToServer(sock, b, m, l) == 0){
 		puts("Mulitplication failed");
-		return;
+		return NULL;
 	}
 	
 	if(send2DMatrixToServer(sock, c, n, l) == 0){
 		puts("Mulitplication failed");
-		return;
+		return NULL;
 	}
 
 	//adding code here to receive the result array from the server
@@ -187,14 +187,14 @@ void multiply(int *a, int *b, int n, int m, int l, int *c){
 		
 		statusOfRead = recv(sock , c , sizeof(int)*resultRow*resultColumn,0);
 		if(statusOfRead > 0){	
-			return;	
+			return c;	
 		}//end of if(statusOfRead > 0)
 		else{
 			puts("Error receiving result array.");
 			break;
 		}
 	}//end of while
-
+	return NULL;
 }
 
 int wc(char string[]){
@@ -486,5 +486,6 @@ int main(){
 	close(sock);
 	return 0;
 }
+
 
 

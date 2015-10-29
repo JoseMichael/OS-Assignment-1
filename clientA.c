@@ -97,11 +97,11 @@ int input(){
 					matrix3[num]=0;
 				}
 
-				multiply(matrix1, matrix2, rowA, columnA, columnB, matrix3);
+				int *p=multiply(matrix1, matrix2, rowA, columnA, columnB, matrix3);
 	
 				puts("Result is:");
 				for(num = 0; num < rowA*columnB; num++){
-					printf("\n%d",matrix3[num]);
+					printf("\n%d",*(p+num));
 				}
 			}
 			break;
@@ -171,3 +171,4 @@ int input(){
 
 	return 0;
 }
+

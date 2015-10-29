@@ -25,7 +25,7 @@ Bhavin Modi
 //the thread function
 void *connection_handler(void *);
 
-void recv2DArrays(int , int *, int *, int **);
+int recv2DArrays(int , int *, int *, int **);
 int recvFromClient(int , int , int *, int *, char *, int);
 int connectToDirServer();
 int sockToDirServer;
@@ -377,10 +377,71 @@ int main(int argc , char *argv[])
      
     return 0;
 }
+
+void receiveCharArrayFromClient(int sock, char **charArray)
+{
+	
+}
  
-/*
- * This will handle connection for each client
- * */
+int receiveArrayFromClient(int sock, int *size, int **integerArray)
+{
+	int sizeOfArray=0;
+	int statusOfSizeSend;
+	statusOfSizeSend = recvFromClient(sock, 1, NULL, size, NULL, (int)sizeof(int));
+	if( statusOfSizeSend < 0 )
+	{
+		printf("Receive failed. \n");
+		return;
+	}
+	int size2 = *size;
+	*integerArray = (int*)malloc(size2);
+	//int intArray[sizeOfArray];
+		int dummy = -999;
+	int *dummyPointer = &dummy;
+
+		int statusOfArraySend = recvFromClient(sock, 2, *integerArray, dummyPointer, NULL, sizeof(int)*size2);
+		if(statusOfArraySend > 0)
+		{
+		//array also has been received successfully
+		printf("Array received successfully \n");
+		return 1;
+		}
+		else if(statusOfArraySend < 0)
+		{
+			printf("Array recv failed \n");
+			return 0;
+		}
+}
+
+void successOrFailedSend(int a)
+{
+	if(a==1)
+	{
+		printf("Value sent successsfully \n");
+	}
+	else
+	{
+		printf("Value NOT sent successsfully \n");
+	}
+}
+
+int send1DArrayToClient(int sock, int sizeOfArray, int *sortedArray)
+{
+	int statusOfSizeSend = sendToClient(sock, 1, NULL, sizeOfArray, NULL, 0);
+	successOrFailedSend(statusOfSizeSend);
+	int statusOfArraySend = sendToClient(sock, 2, sortedArray, -999, NULL, sizeof(int)*sizeOfArray);
+	successOrFailedSend(statusOfArraySend);
+	if(statusOfSizeSend==1 && statusOfSizeSend==1)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+	
+}
+
 void *connection_handler(void *socket_desc)
 {
     //Get the socket descriptor
@@ -414,280 +475,86 @@ while(1)
 }
 	
 	
-//if(counter==1)
 switch(counter)
 {
 	
 case 1:
 {
-	//function for max value
-	int sizeOfArray=0;
-	//code to read the size of the array that will be sent
-	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
-	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
-	if( read_size > 0 )
-	{
-		//Send the message back to client
+	//function for max
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int result = max(size,intArr);
+	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+	successOrFailedSend(statusOfValSent);
 
-		//adding an integer array with size got from before
-		int intArray[sizeOfArray];
-
-
-		//adding a while that will look for the array
-		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
-		while(1)
-		//this while is used to receive the array from the client
-		{
-			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
-			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
-			if(read_size > 0)
-			{
-				printf("Array received \n");
-
-				int maxValueInTheArray = max(sizeOfArray,intArray);
-				//printf used to test code -- 
-				printf("The max value in that array was %d \n", maxValueInTheArray);
-				//writing the result back to the client
-				write(sock , &maxValueInTheArray , sizeof(maxValueInTheArray));
-
-				break;
-				//the break is supposed to ideally break the internal while
-			}//end of if that checks if inside second while
-		}//end of while that looks for array
-
-
-	}//end of if
-	else if(read_size == 0)
-	{
-		puts("Recv Failed");
-		fflush(stdout);
-	}//end of else if
-}//end of if counter==1
+}//end of case 1
 break;
-//else if(counter==2)
 case 2:
 {
-	//function for min value
-		int sizeOfArray=0;
-	//code to read the size of the array that will be sent
-	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
-	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
-	if( read_size > 0 )
-	{
-		//Send the message back to client
+	//function for min
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int result = min(size,intArr);
+	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+	successOrFailedSend(statusOfValSent);
 
-		//adding an integer array with size got from before
-		int intArray[sizeOfArray];
-
-
-		//adding a while that will look for the array
-		while(1)
-		//this while is used to receive the array from the client
-		{
-			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
-			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
-			if(read_size > 0)
-			{
-				printf("Array received \n");
-
-				int minValueInTheArray = min(sizeOfArray,intArray);
-				//printf used to test code -- 
-				printf("The min value in that array was %d \n", minValueInTheArray);
-				//writing the result back to the client
-				write(sock , &minValueInTheArray , sizeof(minValueInTheArray));
-
-				break;
-				//the break is supposed to ideally break the internal while
-			}//end of if that checks if inside second while
-		}//end of while that looks for array
-
-
-	}//end of if
-	else if(read_size == 0)
-	{
-		puts("Recv Failed");
-		fflush(stdout);
-	}//end of else if
-	
 }//end of if counter == 2
 break;
-//else if(counter==3)
 case 3:
 {
 
 int rowSize1, rowSize2, rowSize3;
 int colSize1, colSize2, colSize3;
-
 int *matrix1, *matrix2, *matrix3;
 
+int statusOfParam1 =recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+int statusOfParam2 =recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
+int statusOfParam3 =recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
 
-recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
-
-recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
-
-recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
-
-
-printf("The values of the array are \n");
-int rows,cols;
-printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
-/*
-printf("Matrix 1 \n");
-
-//Code used to display the matrix
-
-	for(rows=0;rows<rowSize1;rows++)
-	{
-	for(cols=0;cols<colSize1;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix1+((rows * colSize1)+cols)));
-	}
-	printf("\n");
-	}
-
-printf("Matrix 2 \n");
-
-//Code used to display the matrix
-
-	for(rows=0;rows<rowSize2;rows++)
-	{
-	for(cols=0;cols<colSize2;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix2+((rows * colSize2)+cols)));
-	}
-	printf("\n");
-	}
-	
-
-
-printf("Matrix 3 \n");
-
-//Code used to display the matrix
-
-	for(rows=0;rows<rowSize3;rows++)
-	{
-	for(cols=0;cols<colSize3;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix3+((rows * colSize3)+cols)));
-	}
-	printf("\n");
-	}
-	*/
-	
-	
-	
-	//printf("Babe just gonna get into multiply \n");
-
-multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
-
-printf("See matrix 3 after calculation \n");
-//Code used to display the matrix
-/* */
-	for(rows=0;rows<rowSize3;rows++)
-	{
-	for(cols=0;cols<colSize3;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix3+((rows * colSize3)+cols)));
-	}
-	printf("\n");
-	}
-
-int sendStatusOfMultipliedMatrix = send2DMatrixToClient(sock, rowSize3, colSize3, matrix3);
-
-if(sendStatusOfMultipliedMatrix==1)
+if(!(statusOfParam1==1 && statusOfParam2==1 && statusOfParam3==1))
 {
-	printf("Muliplied Array sent successfully \n");
+	break;
 }
 
+int* result = multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
 
-}//end of counter==2
+int statusOfValSent = send2DMatrixToClient(sock, rowSize3, colSize3, result);
+successOrFailedSend(statusOfValSent);
+
+}//end of case 3
 break;
-
-
-//else if(counter==4)
 case 4:
 {//function for sorting
-	
-	int sizeOfArray=0;
-	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
-	if( read_size > 0 )
-	{
-		//Send the message back to client
 
-		//adding an integer array with size got from before
-		int intArray[sizeOfArray];
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int *result = sort(size,intArr);				
+	int statusOfValSent = send1DArrayToClient(sock, size, result);
+	successOrFailedSend(statusOfValSent);
 
-
-		//adding a while that will look for the array
-		while(1)
-		//this while is used to receive the array from the client
-		{
-			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
-			if(read_size > 0)
-			{
-				printf("Array received \n");
-				int i=0;
-				printf("Printing all values of the received array \n");
-				for(i=0;i<sizeOfArray;i++)
-				{
-					printf("%d \n",intArray[i]);
-				}
-
-				int *sortedArray = sort(sizeOfArray,intArray);				
-				i=0;
-				printf("Printing all values after computation \n");
-				for(i=0;i<sizeOfArray;i++)
-				{
-					printf("%d \n",sortedArray[i]);
-				}
-				
-				int statusOfSizeSend = sendToClient(sock, 1, NULL, sizeOfArray, NULL, 0);
-				int statusOfArraySend = sendToClient(sock, 2, sortedArray, -999, NULL, sizeof(int)*sizeOfArray);
-				if(statusOfArraySend==1)
-				{
-					printf("Array sent successfully \n");
-					break;
-				}
-				//the break is supposed to ideally break the internal while
-			}//end of if that checks if inside second while
-		}//end of while that looks for array
-
-
-	}//end of if
-	else if(read_size == 0)
-	{
-		puts("Recv Failed");
-		fflush(stdout);
-	}//end of else if
-	
-
-}//end of counter==4
+}//end of case 4
 break;
-//else if(counter==5)
 case 5:
-{ //function for word count
+{ 
+	//function for word count
 	char string[2048];
 	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
-	if(status==1)
-	{
-		//printf("Yo got that string shit \n");
-		printf("The string received is %s \n",string);
+	if(status==0)
+		break;
+	int result = wc(string);
+	int statusOfValSent =  sendToClient( sock, 1, NULL, result, NULL, sizeof(int));
+	successOrFailedSend(statusOfValSent);
 		
-		int wordCountResult = wc(string);
-		printf("The number of words in that sentence are %d \n",wordCountResult);
-		
-		int statusOfWordCountToClient =  sendToClient( sock, 1, NULL, wordCountResult, NULL, sizeof(int));
-		if(statusOfWordCountToClient>0)
-		{
-			printf("Word count sent \n");
-		}
-		
-	}
-}//end of if counter==5
+}//end of case 5
 break;
 }//end of switch
 
@@ -812,7 +679,7 @@ return 0; //this shows that there was an error in the send
 }//end of function
 
 
-void recv2DArrays(int sock, int *rowSize, int *colSize, int **integerArray)
+int recv2DArrays(int sock, int *rowSize, int *colSize, int **integerArray)
 {
 
 int recvRowSizeStatus = recvFromClient(sock, 1, NULL, rowSize, NULL, 0);
@@ -853,7 +720,7 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 		{
 		//array also has been received successfully
 		printf("Array received successfully \n");
-		return;
+		return 1;
 		}
 		else if(statusOfArraySend < 0)
 		{
@@ -864,7 +731,7 @@ if(recvRowSizeStatus > 0 && recvColSizeStatus > 0)
 }//end of if for row and col size sent
 
 
-
+return 0;
 }//end of function
 
 int sendAck(int sock)

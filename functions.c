@@ -29,7 +29,7 @@ int min(int size, int *arr){
 	return minimum;
 }
 
-void multiply(int *a, int *b, int n, int m, int l, int *c){
+int * multiply(int *a, int *b, int n, int m, int l, int *c){
     //Multiply a and b, store in c
 	int i, j, k;
 
@@ -40,6 +40,7 @@ void multiply(int *a, int *b, int n, int m, int l, int *c){
 			}
 		}
 	}
+	return c;
 }
 
 int wc(char str[]){
@@ -97,3 +98,4 @@ int * sort(int size, int* array){
 	quicksort(array,0,size-1);
 	return array;
 }
+
