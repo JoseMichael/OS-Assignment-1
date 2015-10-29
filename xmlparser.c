@@ -7,8 +7,200 @@ typedef struct
 	char value[100];
 }charHolder;
 
+struct remember
+{
+	char dataType[20];
+	struct remember *next;
+}*head, *curr;
 
 int serviceNo, versionNo;
+
+void addToRemember(char dataType[]){
+	struct remember *ptr = (struct remember*)malloc(sizeof(struct remember));
+
+	if(NULL == ptr){
+		puts("Node Creation Failed");
+		return;
+	}
+
+	strcpy(ptr->dataType, dataType);
+	if(head == NULL){
+		head = curr = ptr;
+	}else{
+		curr->next = ptr;
+		curr = ptr;
+	}
+}
+
+int searchRemember(char dataType[]){
+	int found = 0;
+
+	struct remember *ptr = head;
+	
+	while(ptr != NULL){
+		if(strcmp(ptr->dataType,dataType) == 0){
+			found = 1;
+			break;
+		}
+		ptr = ptr->next;
+	}
+
+	if(found == 0){
+		return -1;
+	}else{
+		return 1;
+	}
+}
+
+void emptyRemember(){
+	struct remember *ptr = head;
+	struct remember *prev = head;
+	
+	while(ptr != NULL){
+		prev = ptr;
+		ptr = ptr->next;
+		free(prev);
+	}
+
+	head = NULL;
+}
+
+int write(char input[], char output[]){
+	return 1;
+}
+
+int writeToFile(int type, char dataType[]){
+	switch(type){
+		case 0:
+			//Depending on datatype write the function
+			if(strcmp(dataType,"int") == 0){
+				//Integer
+				if(write("sendint.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else if(strcmp(dataType,"int*") == 0){
+				//integer Array
+				if(write("sendintarray.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else if(strcmp(dataType,"char[]") == 0){
+				if(write("sendstring.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else{
+				//Data Type Not supported
+				puts("Unsupported Data Type");
+				return -1;
+			}
+		break;
+		case 1:
+			//Depending on datatype write the function
+			if(strcmp(dataType,"int") == 0){
+				//Integer
+				if(write("readint.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else if(strcmp(dataType,"int*") == 0){
+				//integer Array
+				if(write("readintarray.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else{
+				//Data Type Not supported
+				puts("Unsupported Data Type");
+				return -1;
+			}
+		break;
+	}
+	
+	//Successful
+	return 1;
+}
+
+void writeFunc(char def[]){
+	puts(def);
+}
+
+int createClientStub(charHolder c[][6], int numRows){
+	//has 6 columns
+	puts("Check Point 1");
+	//Check Data Types: For all Data types found, add the respective send functions
+	int counter = 0;
+	while(counter < numRows){		
+		if(searchRemember(c[counter][5].value) < 0){
+			//Found
+			counter++;
+			continue;
+		}else{
+			//Not Found
+			addToRemember(c[counter][5].value);
+			if(writeToFile(0, c[counter][5].value) < 0){
+				puts("Client Stub creation failed");
+				return -1;
+			}
+		}
+		counter++;
+	}
+
+	puts("Check Point 2");
+
+	emptyRemember();
+	counter = 0;
+	//Check Return Types and add the respective receive functions
+	while(counter < numRows){		
+		if(searchRemember(c[counter][2].value) < 0){
+			//Found
+			counter++;
+			continue;
+		}else{
+			//Not Found
+			addToRemember(c[counter][2].value);
+			if(writeToFile(1, c[counter][2].value) < 0){
+				puts("Client Stub creation failed");
+				return -1;
+			}
+		}
+		counter++;
+	}
+	
+	//Write the function procedures, create definitions first
+	counter = 0;
+	int funcid, temp;
+	char def[100], tempdef[50];
+	while(counter < numRows){
+		if(counter == 0){
+			sscanf(c[counter][0].value,"%d",&funcid);
+
+			//Add return type name ( param
+			sprintf(def,"%s %s\(%s %s",c[counter][2].value,c[counter][1].value,c[counter][5].value,c[counter][3].value);
+		}else{
+			sscanf(c[counter][0].value,"%d",&temp);
+			if(temp == funcid){
+				//Still the same ID, add to definition
+				sprintf(tempdef,",%s %s",c[counter][5].value,c[counter][3].value);
+				strcat(def,tempdef);
+			}else{
+				//Finish Old function
+				strcat(def,")");
+				writeFunc(def);
+				
+				//Next function 
+				funcid = temp;
+				//Add return type name ( param
+			sprintf(def,"%s %s\(%s %s",c[counter][2].value,c[counter][1].value,c[counter][5].value,c[counter][3].value);
+			}
+		}		
+		counter++;
+	}	
+	
+	//Successful
+	return 1;
+}
 
 int main()
 {
@@ -73,13 +265,13 @@ for(i=0; i<countOfParams; i++)
 	printf("\n");
 }
 
+	//Set Linked List head to Null
+	head = NULL;
+	//Create Client Stub
+	if(createClientStub(c, countOfParams) < 0){
+		return 1;
+	}
 
-
-
-
-
-
-
-
-return 0;
+	
+	return 0;
 }
