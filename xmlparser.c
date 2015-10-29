@@ -128,8 +128,23 @@ int writeToFile(int type, char dataType[]){
 					return -1;
 				}
 			}else if(strcmp(dataType,"int*") == 0){
+				//Check if read int is needed
+				if(searchRemember("int") < 0){
+					//Not Found Integer
+					addToRemember("int");
+					if(write("readint.c","client_stub.c") < 0){
+						puts("Write Failed");
+						return -1;
+					}
+				}
+				
 				//integer Array
 				if(write("readintarray.c","client_stub.c") < 0){
+					puts("Write Failed");
+					return -1;
+				}
+			}else if(strcmp(dataType,"char*") == 0){
+				if(write("readstring.c","client_stub.c") < 0){
 					puts("Write Failed");
 					return -1;
 				}
@@ -145,8 +160,23 @@ int writeToFile(int type, char dataType[]){
 	return 1;
 }
 
+void restructure(char *saver){
+	const char delim[1] = "*";
+	char temp[100];
+	char *token;
+	int i = 0;
+	
+	token = strtok(saver, delim);
+	while(token != NULL){
+		if(i == 0){
+			strcpy(temp,token);
+		}
+		token = strtok(NULL, delim);
+	}
+	strcpy(saver,temp);
+}
+
 void writeFunc(char def[], int fid){
-	puts(def);
 	FILE *fp;
 	const char delim1[3] = "(,)";
 	const char delim2[1] = " ";
@@ -166,11 +196,6 @@ void writeFunc(char def[], int fid){
 	fputs(def,fp);
 	fputs("{\n",fp);
 	
-	//Write function Indentifier send
-	sprintf(functionId,"%s(%d)%s","if(sendInt",fid,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
-	fputs(functionId,fp);
-	fputs("\n",fp);
-	
 	//Split into send and receive
 	token = strtok_r(def, delim1,&endstr1);
 	i = 0;
@@ -178,6 +203,15 @@ void writeFunc(char def[], int fid){
 		if(i == 0){
 			//Save receive token
 			strcpy(receive,token);
+
+			//Write function Indentifier send
+			if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
+				sprintf(functionId,"%s(%d)%s","if(sendInt",fid,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
+			}else{
+				sprintf(functionId,"%s(%d)%s","if(sendInt",fid,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+			}
+			fputs(functionId,fp);
+			fputs("\n",fp);
 		}else{
 			//Add send code				
 			if(strstr(token,"int*") != NULL){
@@ -188,7 +222,12 @@ void writeFunc(char def[], int fid){
 					sepInt = strtok_r(NULL, delim2,&endstr2);
 				}				
 				
-				sprintf(functionId,"%s(%s,%s)%s","if(sendIntArray",intSaver,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
+					sprintf(functionId,"%s(%s,%s)%s","if(sendIntArray",intSaver,temp,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
+				}else{
+					sprintf(functionId,"%s(%s,%s)%s","if(sendIntArray",intSaver,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				}
+				
 				fputs(functionId,fp);
 				fputs("\n",fp);
 				
@@ -205,7 +244,7 @@ void writeFunc(char def[], int fid){
 				}
 
 				//Add to a buff
-				if(saveCount < 3){
+				if(saveCount < 2){
 					if(saveCount == 0){
 						strcpy(intSaver,"");
 						strcat(intSaver,temp);
@@ -215,9 +254,18 @@ void writeFunc(char def[], int fid){
 						strcat(intSaver,temp);
 						saveCount++;
 					}
+				}else{
+					restructure(intSaver);
+					strcat(intSaver,"*");
+					strcat(intSaver,temp);	
 				}
 				
-				sprintf(functionId,"%s(%s)%s","if(sendInt",temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
+					sprintf(functionId,"%s(%s)%s","if(sendInt",temp,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
+				}else{
+					sprintf(functionId,"%s(%s)%s","if(sendInt",temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				}
+				
 				fputs(functionId,fp);
 				fputs("\n",fp);
 			}else if(strstr(token,"char*") != NULL){
@@ -228,7 +276,12 @@ void writeFunc(char def[], int fid){
 					sepInt = strtok_r(NULL, delim2,&endstr2);
 				}
 
-				sprintf(functionId,"%s(%d,%s)%s","if(sendString",2048,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
+					sprintf(functionId,"%s(%d,%s)%s","if(sendString",2048,temp,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
+				}else{
+					sprintf(functionId,"%s(%d,%s)%s","if(sendString",2048,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				}
+				
 				fputs(functionId,fp);
 				fputs("\n",fp);
 			}
@@ -241,20 +294,25 @@ void writeFunc(char def[], int fid){
 	if(strstr(receive,"int*") != NULL){
 		//get array size, declare new integer
 		fputs("int num1;\n",fp);
-		sprintf(functionId,"%s(%s)%s","if(readInt","num1","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
+		sprintf(functionId,"%s(%s)%s","if(readInt","num1","<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
 		fputs(functionId,fp);		
 	
 		//declare new array
 		fputs("int tempArray[num1];\n",fp);
-		sprintf(functionId,"%s(%s,%s)%s","if(readIntArray","num1","tempArray","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
+		sprintf(functionId,"%s(%s,%s)%s","if(readIntArray","num1","tempArray","<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
 		fputs(functionId,fp);
 		fputs("return tempArray;\n",fp);
-	}else{
+	}else if(strstr(receive,"int") != NULL){
 		//declare new integer
 		fputs("int num1;\n",fp);
 		sprintf(functionId,"%s(%s)%s","if(readInt","num1","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
 		fputs(functionId,fp);
 		fputs("return num1;\n",fp);
+	}else if(strstr(receive,"char*") != NULL){
+		fputs("char tempString[100];\n",fp);
+		sprintf(functionId,"%s(%d,%s)%s","if(readstring",2048,"tempString","<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
+		fputs(functionId,fp);
+		fputs("return tempString;\n",fp);
 	}
 
 	fputs("}",fp);
@@ -283,9 +341,9 @@ int createClientStub(charHolder c[][6], int numRows){
 	char tempBuff[100];
 	remove("temp.c");
 	fp = fopen("temp.c","a");
-	sprintf(tempBuff,"%s %d\n","#define programID",serviceNo);
+	sprintf(tempBuff,"%s %d%s\n","int programID = ",serviceNo,";");
 	fputs(tempBuff,fp);
-	sprintf(tempBuff,"%s %d\n","#define version",versionNo);
+	sprintf(tempBuff,"%s %d%s\n","int version = ",versionNo,";");
 	fputs(tempBuff,fp);
 	fputs("int sock;\n",fp);
 	fclose(fp);
@@ -438,7 +496,91 @@ int createHeaderFile(charHolder c[][6], int numRows){
 }
 
 int createServerStub(charHolder c[][6], int numRows){
+	//Write include files
+	if(write("includeserverfiles.c","server_stub.c") < 0){
+		puts("Header Files Write failed");
+		return -1;
+	}
+
+	//Write global variables
+	FILE *fp;
+	char tempBuff[100];
+	remove("temp.c");
+	fp = fopen("temp.c","a");
+	sprintf(tempBuff,"%s %d\n","#define programID",serviceNo);
+	fputs(tempBuff,fp);
+	sprintf(tempBuff,"%s %d\n","#define version",versionNo);
+	fputs(tempBuff,fp);
+	fputs("int sock;\n",fp);
+	fclose(fp);
+	if(write("temp.c","server_stub.c") < 0){
+		puts("Global Variables Write failed");
+		return -1;
+	}
+	//Remove temp file after use
+	remove("temp.c");
 	
+	//Write the Before switch
+	if(write("beforeswitch.c","server_stub.c") < 0){
+		puts("beforeswitch Write failed");
+		return -1;
+	}
+	
+	puts("Server Check Point 1");
+
+	//Temp file to write cases
+	fp = fopen("temp.c","a");		
+
+	//Write Switch Cases
+	int counter = 0;
+	int funcid = -1;
+	
+	while(counter < numRows){
+		if(funcid == -1){
+			sscanf(c[counter][0].value,"%d",&funcid);
+
+			//Start A Case
+			sprintf(tempBuff,"%s %d%s\n","case",funcid,":\n");
+			fputs(tempBuff,fp);
+
+			//get param
+			if(strcmp(c[counter][5],"int") == 0){
+			int tempfuncid1, tempfuncid2;
+			sscanf(c[counter+1][0].value,"%d",&tempfuncid1);
+			sscanf(c[counter+2][0].value,"%d",&tempfuncid2);
+				if(tempfuncid1==funcid)
+				{
+					if(strcmp(c[counter+1][5],"int*") == 0)
+					{
+						//add 1d array functions
+					}
+					else if(strcmp(c[counter+1][5],"int"&&) == 0)
+					{
+						//add code to check if next variable is array
+						if(strcmp(c[counter+2][5],"int") == 0)
+						{
+					
+						}
+					}
+					else
+					{
+						//add code to put in int functions
+					}
+				}
+			}
+		}else{
+		}
+		counter++;
+	}
+	
+	//Write the after switch
+	if(write("afterswitch.c","server_stub.c") < 0){
+		puts("afterswitch Write failed");
+		return -1;
+	}
+	
+	//Successful
+	return 1;
 }
 
 int main()
