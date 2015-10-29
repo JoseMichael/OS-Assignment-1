@@ -26,7 +26,9 @@ void addToRemember(char dataType[]){
 	}
 
 	strcpy(ptr->dataType, dataType);
-	if(head == NULL){
+	ptr->next = NULL;
+	
+	if(NULL == head){
 		head = curr = ptr;
 	}else{
 		curr->next = ptr;
@@ -262,20 +264,43 @@ void writeFunc(char def[], int fid){
 	
 	//Write this file to the main stub
 	write("temp.c","client_stub.c");
+
+	//Remove temp file after use
+	remove("temp.c");
 }
 
 int createClientStub(charHolder c[][6], int numRows){
 	//has 6 columns
 
-	//TODO:Write include files
-	
-	//TODO:Write global variables
+	//Write include files
+	if(write("includefiles.c","client_stub.c") < 0){
+		puts("Header Files Write failed");
+		return -1;
+	}	
+
+	//Write global variables
+	FILE *fp;
+	char tempBuff[100];
+	remove("temp.c");
+	fp = fopen("temp.c","a");
+	sprintf(tempBuff,"%s %d\n","#define programID",serviceNo);
+	fputs(tempBuff,fp);
+	sprintf(tempBuff,"%s %d\n","#define version",versionNo);
+	fputs(tempBuff,fp);
+	fputs("int sock;\n",fp);
+	fclose(fp);
+	if(write("temp.c","client_stub.c") < 0){
+		puts("Global Variables Write failed");
+		return -1;
+	}
+	//Remove temp file after use
+	remove("temp.c");
 	
 	puts("Check Point 1");
 	//Check Data Types: For all Data types found, add the respective send functions
 	int counter = 0;
 	while(counter < numRows){		
-		if(searchRemember(c[counter][5].value) < 0){
+		if(searchRemember(c[counter][5].value) > 0){
 			//Found
 			counter++;
 			continue;
@@ -296,7 +321,7 @@ int createClientStub(charHolder c[][6], int numRows){
 	counter = 0;
 	//Check Return Types and add the respective receive functions
 	while(counter < numRows){		
-		if(searchRemember(c[counter][2].value) < 0){
+		if(searchRemember(c[counter][2].value) > 0){
 			//Found
 			counter++;
 			continue;
@@ -354,6 +379,66 @@ int createClientStub(charHolder c[][6], int numRows){
 	
 	//Successful
 	return 1;
+}
+
+int createHeaderFile(charHolder c[][6], int numRows){
+	//Create definitions to put in header file
+	int counter = 0, funcid, temp;
+	char def[100], tempdef[50];
+	
+	remove("temp.c");
+	FILE *fp;
+	fp = fopen("temp.c","a");
+	
+	fputs("#ifndef RPCHEADER_H_\n",fp);
+	fputs("#define RPCHEADER_H_\n",fp);
+	
+	while(counter < numRows){
+		if(counter == 0){
+			sscanf(c[counter][0].value,"%d",&funcid);
+
+			//Add return type name ( param
+			sprintf(def,"%s %s\(%s %s",c[counter][2].value,c[counter][1].value,c[counter][5].value,c[counter][3].value);
+		}else{
+			sscanf(c[counter][0].value,"%d",&temp);
+			if(temp == funcid){
+				//Still the same ID, add to definition
+				sprintf(tempdef,",%s %s",c[counter][5].value,c[counter][3].value);
+				strcat(def,tempdef);
+			}else{
+				//Finish Old function
+				strcat(def,");\n");
+				fputs(def,fp);
+				
+				//Next function 
+				funcid = temp;
+				//Add return type name ( param
+			sprintf(def,"%s %s\(%s %s",c[counter][2].value,c[counter][1].value,c[counter][5].value,c[counter][3].value);
+			}
+		}		
+		counter++;
+		if(counter == numRows){
+			//Finish Old function
+			strcat(def,");\n");
+			fputs(def,fp);
+		}
+	}
+
+	//Write our client input function definition
+	fputs("int input();\n",fp);
+	fputs("#endif",fp);
+	
+	fclose(fp);
+	
+	//Write Header
+	if(write("temp.c","rpcheader.h") < 0){
+		puts("Main Function Write failed");
+		return -1;
+	}
+}
+
+int createServerStub(charHolder c[][6], int numRows){
+	
 }
 
 int main()
@@ -418,16 +503,32 @@ for(i=0; i<countOfParams; i++)
 	}
 	printf("\n");
 }
+	
+	//Remove an existing header file
+	remove("rpcheader.h");
+	//Create header file
+	if(createHeaderFile(c, countOfParams) < 0){
+		puts("Header File Generation Failed");
+		return 1;
+	}
 
 	//Set Linked List head to Null
-	head = NULL;
+	head = curr = NULL;
 	//Remove an existing client stub
 	remove("client_stub.c");
 	//Create Client Stub
 	if(createClientStub(c, countOfParams) < 0){
+		puts("Client Stub Generation Failed");
 		return 1;
 	}
 
+	//Remove existing server stub
+	remove("server_stub.c");
+	//Create Server stub
+	if(createServerStub(c, countOfParams) < 0){
+		puts("Server Stub Generation Failed");
+		return 1;
+	}
 	
 	return 0;
 }
