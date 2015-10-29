@@ -6,12 +6,12 @@ int sendIntArray(int a, int *b){
 		return -1;
 	}
 	while(1){
-		statusOfAck = recv(sock , &ack , sizeof(int),0);
+		statusOfAck = recv(sock , &ackValue , sizeof(int),0);
 		if(statusOfAck < 0){
 			puts("Send Failed");
 			return -1;
 		}else{
-			if(ack == 1){
+			if(ackValue == 1){
 				return 1;
 			}else{
 				puts("Send Failed");

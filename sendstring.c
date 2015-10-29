@@ -1,6 +1,6 @@
-int sendInt(int a){
+int sendString(int a, char *b){
 	int statusOfSend, ackValue=1, statusOfAck;
-	statusOfSend = send(sock , &a , sizeof(int) , 0);
+	statusOfSend = send(sock , b , sizeof(char)*a , 0);
 	if(statusOfSend < 0){
 		puts("Send Failed");
 		return -1;
