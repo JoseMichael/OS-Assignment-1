@@ -414,8 +414,13 @@ while(1)
 }
 	
 	
-if(counter==1)
+//if(counter==1)
+switch(counter)
 {
+	
+case 1:
+{
+	//function for max value
 	int sizeOfArray=0;
 	//code to read the size of the array that will be sent
 	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
@@ -458,120 +463,11 @@ if(counter==1)
 		fflush(stdout);
 	}//end of else if
 }//end of if counter==1
-else if(counter==3)
+break;
+//else if(counter==2)
+case 2:
 {
-
-int rowSize1, rowSize2, rowSize3;
-int colSize1, colSize2, colSize3;
-
-int *matrix1, *matrix2, *matrix3;
-
-
-recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
-
-recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
-
-recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
-
-
-printf("The values of the array are \n");
-int rows,cols;
-printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
-
-printf("Matrix 1 \n");
-
-//Code used to display the matrix
-
-	for(rows=0;rows<rowSize1;rows++)
-	{
-	for(cols=0;cols<colSize1;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix1+((rows * colSize1)+cols)));
-	}
-	printf("\n");
-	}
-
-printf("Matrix 2 \n");
-
-//Code used to display the matrix
-/* */
-	for(rows=0;rows<rowSize2;rows++)
-	{
-	for(cols=0;cols<colSize2;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix2+((rows * colSize2)+cols)));
-	}
-	printf("\n");
-	}
-	
-
-
-printf("Matrix 3 \n");
-
-//Code used to display the matrix
-
-	for(rows=0;rows<rowSize3;rows++)
-	{
-	for(cols=0;cols<colSize3;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix3+((rows * colSize3)+cols)));
-	}
-	printf("\n");
-	}
-	
-	
-	
-	//printf("Babe just gonna get into multiply \n");
-
-multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
-
-printf("See matrix 3 after calculation \n");
-//Code used to display the matrix
-/* */
-	for(rows=0;rows<rowSize3;rows++)
-	{
-	for(cols=0;cols<colSize3;cols++)
-	{
-	//printf("Test");
-	printf("%d",*(matrix3+((rows * colSize3)+cols)));
-	}
-	printf("\n");
-	}
-
-int sendStatusOfMultipliedMatrix = send2DMatrixToClient(sock, rowSize3, colSize3, matrix3);
-
-if(sendStatusOfMultipliedMatrix==1)
-{
-	printf("Muliplied Array sent successfully \n");
-}
-
-
-}//end of counter==2
-else if(counter==5)
-{
-	char string[2048];
-	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
-	if(status==1)
-	{
-		//printf("Yo got that string shit \n");
-		printf("The string received is %s \n",string);
-		
-		int wordCountResult = wc(string);
-		printf("The number of words in that sentence are %d \n",wordCountResult);
-		
-		int statusOfWordCountToClient =  sendToClient( sock, 1, NULL, wordCountResult, NULL, sizeof(int));
-		if(statusOfWordCountToClient>0)
-		{
-			printf("Word count sent \n");
-		}
-		
-	}
-}//end of if counter==5
-else if(counter==2)
-{
+	//function for min value
 		int sizeOfArray=0;
 	//code to read the size of the array that will be sent
 	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
@@ -585,7 +481,6 @@ else if(counter==2)
 
 
 		//adding a while that will look for the array
-		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
 		while(1)
 		//this while is used to receive the array from the client
 		{
@@ -615,11 +510,109 @@ else if(counter==2)
 	}//end of else if
 	
 }//end of if counter == 2
-else if(counter==4)
+break;
+//else if(counter==3)
+case 3:
 {
-			int sizeOfArray=0;
-	//code to read the size of the array that will be sent
-	//read_size = recv(sock , &testvar , sizeof(testvar) , 0);
+
+int rowSize1, rowSize2, rowSize3;
+int colSize1, colSize2, colSize3;
+
+int *matrix1, *matrix2, *matrix3;
+
+
+recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+
+recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
+
+recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
+
+
+printf("The values of the array are \n");
+int rows,cols;
+printf("rowSize1 and colSize1 are %d %d \n",rowSize1,colSize1);
+/*
+printf("Matrix 1 \n");
+
+//Code used to display the matrix
+
+	for(rows=0;rows<rowSize1;rows++)
+	{
+	for(cols=0;cols<colSize1;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix1+((rows * colSize1)+cols)));
+	}
+	printf("\n");
+	}
+
+printf("Matrix 2 \n");
+
+//Code used to display the matrix
+
+	for(rows=0;rows<rowSize2;rows++)
+	{
+	for(cols=0;cols<colSize2;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix2+((rows * colSize2)+cols)));
+	}
+	printf("\n");
+	}
+	
+
+
+printf("Matrix 3 \n");
+
+//Code used to display the matrix
+
+	for(rows=0;rows<rowSize3;rows++)
+	{
+	for(cols=0;cols<colSize3;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix3+((rows * colSize3)+cols)));
+	}
+	printf("\n");
+	}
+	*/
+	
+	
+	
+	//printf("Babe just gonna get into multiply \n");
+
+multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
+
+printf("See matrix 3 after calculation \n");
+//Code used to display the matrix
+/* */
+	for(rows=0;rows<rowSize3;rows++)
+	{
+	for(cols=0;cols<colSize3;cols++)
+	{
+	//printf("Test");
+	printf("%d",*(matrix3+((rows * colSize3)+cols)));
+	}
+	printf("\n");
+	}
+
+int sendStatusOfMultipliedMatrix = send2DMatrixToClient(sock, rowSize3, colSize3, matrix3);
+
+if(sendStatusOfMultipliedMatrix==1)
+{
+	printf("Muliplied Array sent successfully \n");
+}
+
+
+}//end of counter==2
+break;
+
+
+//else if(counter==4)
+case 4:
+{//function for sorting
+	
+	int sizeOfArray=0;
 	read_size = recvFromClient(sock, 1, NULL, &sizeOfArray, NULL, (int)sizeof(int));
 	if( read_size > 0 )
 	{
@@ -630,16 +623,13 @@ else if(counter==4)
 
 
 		//adding a while that will look for the array
-		//printf used to check stuff -- printf("Here the recv is gonna look for an array with size of %d \n", (int)sizeof(intArray));
 		while(1)
 		//this while is used to receive the array from the client
 		{
 			read_size = recvFromClient(sock,2,intArray,0,NULL,sizeof(int)*sizeOfArray);
-			//read_size = recv(sock , intArray , sizeof(intArray) , 0);
 			if(read_size > 0)
 			{
 				printf("Array received \n");
-				
 				int i=0;
 				printf("Printing all values of the received array \n");
 				for(i=0;i<sizeOfArray;i++)
@@ -656,11 +646,7 @@ else if(counter==4)
 				}
 				
 				int statusOfSizeSend = sendToClient(sock, 1, NULL, sizeOfArray, NULL, 0);
-				//printf used to test code -- 
-				//printf("The min value in that array was %d \n", minValueInTheArray);
-				//writing the result back to the client
 				int statusOfArraySend = sendToClient(sock, 2, sortedArray, -999, NULL, sizeof(int)*sizeOfArray);
-				//write(sock , sortedArray , sizeof(sortedArray));
 				if(statusOfArraySend==1)
 				{
 					printf("Array sent successfully \n");
@@ -680,7 +666,32 @@ else if(counter==4)
 	
 
 }//end of counter==4
-}//end of while
+break;
+//else if(counter==5)
+case 5:
+{ //function for word count
+	char string[2048];
+	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
+	if(status==1)
+	{
+		//printf("Yo got that string shit \n");
+		printf("The string received is %s \n",string);
+		
+		int wordCountResult = wc(string);
+		printf("The number of words in that sentence are %d \n",wordCountResult);
+		
+		int statusOfWordCountToClient =  sendToClient( sock, 1, NULL, wordCountResult, NULL, sizeof(int));
+		if(statusOfWordCountToClient>0)
+		{
+			printf("Word count sent \n");
+		}
+		
+	}
+}//end of if counter==5
+break;
+}//end of switch
+
+}//end of while above that checks for deregistered and maintains menu
 
 //Free the socket pointer
 free(socket_desc);
