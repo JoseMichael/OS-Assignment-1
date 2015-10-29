@@ -1,6 +1,8 @@
 #include "ezxml.h"
 #include <stdio.h>
 #include <string.h>
+#include<stdlib.h>
+#include<stdio.h>
 
 typedef struct 
 {
@@ -66,6 +68,25 @@ void emptyRemember(){
 }
 
 int write(char input[], char output[]){
+	char buff[512];
+	//open files
+	FILE *fp1, *fp2;
+
+	fp1 = fopen(input,"r");
+	fp2 = fopen(output,"a");
+	
+	fputs("\n",fp2);
+	
+	//read a line from input file
+	while(fgets(buff,512,fp1) != NULL){
+		//write the line to output file
+		fputs(buff,fp2);
+	}
+	
+	//close
+	fclose(fp1);
+	fclose(fp2);
+	
 	return 1;
 }
 
@@ -85,7 +106,7 @@ int writeToFile(int type, char dataType[]){
 					puts("Write Failed");
 					return -1;
 				}
-			}else if(strcmp(dataType,"char[]") == 0){
+			}else if(strcmp(dataType,"char*") == 0){
 				if(write("sendstring.c","client_stub.c") < 0){
 					puts("Write Failed");
 					return -1;
@@ -122,12 +143,134 @@ int writeToFile(int type, char dataType[]){
 	return 1;
 }
 
-void writeFunc(char def[]){
+void writeFunc(char def[], int fid){
 	puts(def);
+	FILE *fp;
+	const char delim1[3] = "(,)";
+	const char delim2[1] = " ";
+	int saveCount = 0;
+	char intSaver[100];
+	char receive[100], functionId[100], temp[50];
+	char *token, *sepInt, *endstr1, *endstr2;
+	int i;
+	
+	//Delete the file (if exists)
+	remove("temp.c");
+	
+	//Parse definition and write to file
+	fp = fopen("temp.c","a");
+
+	//Write definition
+	fputs(def,fp);
+	fputs("{\n",fp);
+	
+	//Write function Indentifier send
+	sprintf(functionId,"%s(%d)%s","if(sendInt",fid,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+	fputs(functionId,fp);
+	fputs("\n",fp);
+	
+	//Split into send and receive
+	token = strtok_r(def, delim1,&endstr1);
+	i = 0;
+	while(token != NULL){
+		if(i == 0){
+			//Save receive token
+			strcpy(receive,token);
+		}else{
+			//Add send code				
+			if(strstr(token,"int*") != NULL){
+				//Break the token
+				sepInt = strtok_r(token,delim2,&endstr2);
+				while(sepInt != NULL){
+					strcpy(temp,sepInt);
+					sepInt = strtok_r(NULL, delim2,&endstr2);
+				}				
+				
+				sprintf(functionId,"%s(%s,%s)%s","if(sendIntArray",intSaver,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				fputs(functionId,fp);
+				fputs("\n",fp);
+				
+				//Clear buff
+				saveCount = 0;
+				strcpy(intSaver,"");
+				
+			}else if(strstr(token,"int") != NULL){
+				//Break the token
+				sepInt = strtok_r(token,delim2,&endstr2);
+				while(sepInt != NULL){
+					strcpy(temp,sepInt);
+					sepInt = strtok_r(NULL, delim2,&endstr2);
+				}
+
+				//Add to a buff
+				if(saveCount < 3){
+					if(saveCount == 0){
+						strcpy(intSaver,"");
+						strcat(intSaver,temp);
+						saveCount++;
+					}else{
+						strcat(intSaver,"*");
+						strcat(intSaver,temp);
+						saveCount++;
+					}
+				}
+				
+				sprintf(functionId,"%s(%s)%s","if(sendInt",temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				fputs(functionId,fp);
+				fputs("\n",fp);
+			}else if(strstr(token,"char*") != NULL){
+				//Break the token
+				sepInt = strtok_r(token,delim2,&endstr2);
+				while(sepInt != NULL){
+					strcpy(temp,sepInt);
+					sepInt = strtok_r(NULL, delim2,&endstr2);
+				}
+
+				sprintf(functionId,"%s(%d,%s)%s","if(sendString",2048,temp,"<0){\nputs(\"Send Failure\");\nreturn -1;\n}\n");
+				fputs(functionId,fp);
+				fputs("\n",fp);
+			}
+		}
+		i++;
+		token = strtok_r(NULL, delim1,&endstr1);
+	}
+	
+	//Write Receive code
+	if(strstr(receive,"int*") != NULL){
+		//get array size, declare new integer
+		fputs("int num1;\n",fp);
+		sprintf(functionId,"%s(%s)%s","if(readInt","num1","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
+		fputs(functionId,fp);		
+	
+		//declare new array
+		fputs("int tempArray[num1];\n",fp);
+		sprintf(functionId,"%s(%s,%s)%s","if(readIntArray","num1","tempArray","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
+		fputs(functionId,fp);
+		fputs("return tempArray;\n",fp);
+	}else{
+		//declare new integer
+		fputs("int num1;\n",fp);
+		sprintf(functionId,"%s(%s)%s","if(readInt","num1","<0){\nputs(\"Receive Failure\");\nreturn -1;\n}\n");
+		fputs(functionId,fp);
+		fputs("return num1;\n",fp);
+	}
+
+	fputs("}",fp);
+	
+	//close file
+	fclose(fp);
+	
+	//Write this file to the main stub
+	write("temp.c","client_stub.c");
 }
 
 int createClientStub(charHolder c[][6], int numRows){
 	//has 6 columns
+
+	//TODO:Write include files
+	
+	//TODO:Write global variables
+	
 	puts("Check Point 1");
 	//Check Data Types: For all Data types found, add the respective send functions
 	int counter = 0;
@@ -187,7 +330,7 @@ int createClientStub(charHolder c[][6], int numRows){
 			}else{
 				//Finish Old function
 				strcat(def,")");
-				writeFunc(def);
+				writeFunc(def,funcid);
 				
 				//Next function 
 				funcid = temp;
@@ -196,7 +339,18 @@ int createClientStub(charHolder c[][6], int numRows){
 			}
 		}		
 		counter++;
+		if(counter == numRows){
+			//Finish Old function
+			strcat(def,")");
+			writeFunc(def,funcid);
+		}
 	}	
+	
+	//Write the main
+	if(write("clientmain.c","client_stub.c") < 0){
+		puts("Main Function Write failed");
+		return -1;
+	}
 	
 	//Successful
 	return 1;
@@ -267,6 +421,8 @@ for(i=0; i<countOfParams; i++)
 
 	//Set Linked List head to Null
 	head = NULL;
+	//Remove an existing client stub
+	remove("client_stub.c");
 	//Create Client Stub
 	if(createClientStub(c, countOfParams) < 0){
 		return 1;

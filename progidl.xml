@@ -37,33 +37,48 @@
 		<id>3</id>
 		<return>int*</return>
 		<param>
-			<name>a</name>
+			<name>row1</name>
 			<index>1</index>
-			<type>int*</type>
-		</param>
-		<param>
-			<name>b</name>
-			<index>2</index>
-			<type>int*</type>
-		</param>
-		<param>
-			<name>n</name>
-			<index>3</index>
 			<type>int</type>
 		</param>
 		<param>
-			<name>m</name>
+			<name>col1</name>
+			<index>2</index>
+			<type>int</type>
+		</param>
+		<param>
+			<name>a</name>
+			<index>3</index>
+			<type>int*</type>
+		</param>
+		<param>
+			<name>row2</name>
 			<index>4</index>
 			<type>int</type>
 		</param>
 		<param>
-			<name>l</name>
+			<name>col2</name>
 			<index>5</index>
 			<type>int</type>
 		</param>
 		<param>
-			<name>c</name>
+			<name>b</name>
 			<index>6</index>
+			<type>int*</type>
+		</param>
+		<param>
+			<name>row3</name>
+			<index>7</index>
+			<type>int</type>
+		</param>
+		<param>
+			<name>col3</name>
+			<index>8</index>
+			<type>int</type>
+		</param>
+		<param>
+			<name>c</name>
+			<index>9</index>
 			<type>int*</type>
 		</param>
 	</procedure>
@@ -74,7 +89,7 @@
 		<param>
 			<name>str</name>
 			<index>1</index>
-			<type>char[]</type>
+			<type>char*</type>
 		</param>
 	</procedure>
 	<procedure>
