@@ -45,7 +45,7 @@ int waitForAck(int sock)
 			//Failure break
 			return -1;
 		}
-		else
+		else if (statusOfReceive > 0)
 		{
 			puts("Got ACK");
 			//Got ACK
@@ -72,7 +72,7 @@ int connectToDirServer()
 	//below should contain the ip address of the Directory Service
 	server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
-    server.sin_port = htons( 9999 );
+    server.sin_port = htons( 8000 );
 	
 	//Connect to Server
 	puts("Trying to connect\n");
@@ -83,7 +83,7 @@ int connectToDirServer()
 	}
     
 	//Connected to server
-    puts("Connected\n");
+    puts("Connected \n");
     return 1;
 }
 
@@ -92,11 +92,35 @@ int registerWithDirService()
 	//this code is used to register the server with the directory service
 	int statusOfConnect;
 	statusOfConnect = connectToDirServer();
+	printf("Status of connect is %d \n",statusOfConnect);
 	if(statusOfConnect!=1)
 	{
 		printf("Connection to Directory Service failed \n");
 		return 0;
 	}
+	else
+	{
+		printf("Cool Connection to Directory Service \n");
+	}
+	
+	printf("Time for dummy \n");
+	
+	//first waiting for dummy ack, must DELETE this code ================
+	/*
+	int statusOfAck2;
+	statusOfAck2 = waitForAck(sockToDirServer);
+	if(statusOfAck2 < 0)
+	{
+		printf("Ack from Dir Service failed \n");
+		return 0;
+	}
+	else
+	{
+		printf("Dummy ack was sent to be honest \n");
+	}
+	*/
+	printf("No dummies activated \n");
+	printf("Done with dummy ack \n");
 	
 	//we first send '1' to the Dir Service which shows it that we are a server
 	int statusOfServerSend = sendToClient(sockToDirServer, 1, NULL, 1, NULL, sizeof(int));
@@ -114,6 +138,7 @@ int registerWithDirService()
 		return 0;
 	}
 	
+	printf("Going to send value to indicate I want to register \n");
 	//we then send '1' to indicate that we want to Register
 	int statusOfRegisterMsgSend = sendToClient(sockToDirServer, 1, NULL, 1, NULL, sizeof(int));
 	if(statusOfRegisterMsgSend!=1)
@@ -130,8 +155,8 @@ int registerWithDirService()
 	}
 	
 	//now we send the port
-	//here 9999 is the port that we are listening to for connections from the dir service
-	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 9999, NULL, sizeof(int));
+	//here 8000 is the port that we are listening to for connections from the dir service
+	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 8000, NULL, sizeof(int));
 	if(statusOfPortSend!=1)
 	{
 		printf("Sending Port Number failed \n");
@@ -225,8 +250,8 @@ int deregisterWithDirService()
 	}
 	
 	//now we send the port
-	//here 9999 is the port that we are listening to for connections from the dir service
-	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 9999, NULL, sizeof(int));
+	//here 8000 is the port that we are listening to for connections from the dir service
+	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 8000, NULL, sizeof(int));
 	if(statusOfPortSend!=1)
 	{
 		printf("Sending Port Number failed \n");
@@ -280,6 +305,14 @@ void* deRegisterMenu(void *args)
  
 int main(int argc , char *argv[])
 {
+	//code to register with dir service
+	int statusOfRegistry = registerWithDirService();
+	if(statusOfRegistry==1)
+	{
+		printf("Dir Registry Successful \n");
+	}
+	
+	
     int socket_desc , client_sock , c , *new_sock;
     struct sockaddr_in server , client;
      
@@ -375,7 +408,7 @@ int counter=0;
     
     //Receive a message from client
     
-while(1)
+while(deRegistered==0)
 {
     
 while(1)
@@ -869,6 +902,7 @@ case 1:
 		int statusOfSend = send(sock , &integerToSend , sizeof(integerToSend) , 0);
 		if(statusOfSend > 0)
 		{
+			printf("Integer %d was sent \n",integerToSend);
 			return 1;
 		}
 		else if(statusOfSend < 0)
