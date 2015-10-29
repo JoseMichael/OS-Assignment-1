@@ -7,7 +7,7 @@ int sendInt(int a){
 	}
 	while(1){
 		statusOfAck = recv(sock , &ack , sizeof(int),0);
-		if(statusOfReceive < 0){
+		if(statusOfAck < 0){
 			puts("Send Failed");
 			return -1;
 		}else{

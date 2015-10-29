@@ -1,5 +1,3 @@
-//server copy before indent that had the menu implemented
-
 /*
 
 Operating Systems Project 1
@@ -23,11 +21,6 @@ Bhavin Modi
 #include <net/if.h>
  
 //the thread function
-void *connection_handler(void *);
-
-int recv2DArrays(int , int *, int *, int **);
-int recvFromClient(int , int , int *, int *, char *, int);
-int connectToDirServer();
 int sockToDirServer;
 int programID=1;
 int versionNumber=1;
@@ -288,95 +281,6 @@ void* deRegisterMenu(void *args)
 	setDeregisteredTrue();
 }
  
-int main(int argc , char *argv[])
-{
-	//code to register with dir service
-	int statusOfRegistry = registerWithDirService();
-	if(statusOfRegistry==1)
-	{
-		printf("Dir Registry Successful \n");
-	}
-	
-	
-    int socket_desc , client_sock , c , *new_sock;
-    struct sockaddr_in server , client;
-     
-    //Create socket
-    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
-    if (socket_desc == -1)
-    {
-        printf("Could not create socket");
-    }
-    puts("Socket created");
-     
-    //Prepare the sockaddr_in structure
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    //server.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server.sin_port = htons( 8888 );
-     
-    //Bind
-    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-    {
-        //print the error message
-        perror("bind failed. Error");
-        return 1;
-    }
-    puts("bind done");
-     
-    //Listen
-    listen(socket_desc , 3);
-     
-     
-     
-	//adding code for thread that is supposed to send deregister info to directory
-	
-	pthread_t deregisterThread;
-	int statusOfDeregisterThread = pthread_create(&deregisterThread, NULL, deRegisterMenu, &deRegistered);
-	if(statusOfDeregisterThread==0)
-	{
-		 printf("Deregister Thread created successfully \n");
-	}
-	else
-	{
-		printf("Deregister Thread creation failed \n");
-	}
-	
-	
-	
-	//*************************************************************************
-     
-     
-    //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    c = sizeof(struct sockaddr_in);
-    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
-    {
-        puts("Connection accepted");
-         
-        pthread_t sniffer_thread;
-        new_sock = malloc(1);
-        *new_sock = client_sock;
-         
-        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
-        {
-            perror("could not create thread");
-            return 1;
-        }
-         
-        //Now join the thread , so that we dont terminate before the thread
-        //pthread_join( sniffer_thread , NULL);
-        puts("Handler assigned");
-    }
-     
-    if (client_sock < 0)
-    {
-        perror("accept failed");
-        return 1;
-    }
-     
-    return 0;
-}
 
 /*void receiveCharArrayFromClient(int sock, char **charArray)
 {
@@ -440,131 +344,6 @@ int send1DArrayToClient(int sock, int sizeOfArray, int *sortedArray)
 		return 0;
 	}
 	
-}
-
-void *connection_handler(void *socket_desc)
-{
-    //Get the socket descriptor
-    int sock = *(int*)socket_desc;
-    int read_size;
-    char *message , client_message[2000];
-	//int testvar=0;
-	int **testarray;
-
-//Counter is a depricated variable that is being kept for future use
-int counter=0;
-    
-    //Receive a message from client
-    
-while(deRegistered==0)
-{
-	//printf("Value of deregistered is %d \n",deRegistered);
-	//TODO: Add function to send client some message when the connection is terminated due to deRegistered=0
-    
-while(1)
-{
-	
-	//initializing new while to look for counter value
-	int statusOfCounterRecv = recvFromClient(sock, 1, NULL, &counter, NULL, (int)sizeof(int));
-	if(statusOfCounterRecv>0)
-	{
-		printf("Counter value successfully received and is %d \n",counter);
-		break; //breaks from outer while loop
-	}
-	
-}
-	
-	
-switch(counter)
-{
-	
-case 1:
-{
-	//function for max
-	int size;
-	int *intArr;
-	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
-	if(statusOfRecvParam1==0)
-		break;
-	int result = max(size,intArr);
-	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
-	successOrFailedSend(statusOfValSent);
-
-}//end of case 1
-break;
-case 2:
-{
-	//function for min
-	int size;
-	int *intArr;
-	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
-	if(statusOfRecvParam1==0)
-		break;
-	int result = min(size,intArr);
-	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
-	successOrFailedSend(statusOfValSent);
-
-}//end of if counter == 2
-break;
-case 3:
-{
-
-int rowSize1, rowSize2, rowSize3;
-int colSize1, colSize2, colSize3;
-int *matrix1, *matrix2, *matrix3;
-
-int statusOfParam1 =recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
-int statusOfParam2 =recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
-int statusOfParam3 =recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
-
-if(!(statusOfParam1==1 && statusOfParam2==1 && statusOfParam3==1))
-{
-	break;
-}
-
-int* result = multiply(rowSize1, colSize1,matrix1,rowSize2,colSize2, matrix2,rowSize3,colSize3,matrix3);
-
-int statusOfValSent = send2DMatrixToClient(sock, rowSize3, colSize3, result);
-successOrFailedSend(statusOfValSent);
-
-}//end of case 3
-break;
-case 4:
-{//function for sorting
-
-	int size;
-	int *intArr;
-	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
-	if(statusOfRecvParam1==0)
-		break;
-	int *result = sort(size,intArr);				
-	int statusOfValSent = send1DArrayToClient(sock, size, result);
-	successOrFailedSend(statusOfValSent);
-
-}//end of case 4
-break;
-case 5:
-{ 
-	//function for word count
-	char string[2048];
-	//char *string;
-	int status = recvFromClient(sock, 3, NULL, 0, string, 2048*sizeof(char));
-	if(status==0)
-		break;
-	int result = wc(string);
-	int statusOfValSent =  sendToClient( sock, 1, NULL, result, NULL, sizeof(int));
-	successOrFailedSend(statusOfValSent);
-		
-}//end of case 5
-break;
-}//end of switch
-
-}//end of while above that checks for deregistered and maintains menu
-
-//Free the socket pointer
-free(socket_desc);
-
-return 0;
 }
 
 
@@ -815,3 +594,255 @@ break;
 
 return 0; //this shows that there was an error in the send
 }//end of function
+
+
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000];
+	//int testvar=0;
+	int **testarray;
+
+//Counter is a depricated variable that is being kept for future use
+int counter=0;
+    
+    //Receive a message from client
+    
+while(deRegistered==0)
+{
+	//printf("Value of deregistered is %d \n",deRegistered);
+	//TODO: Add function to send client some message when the connection is terminated due to deRegistered=0
+    
+while(1)
+{
+	
+	//initializing new while to look for counter value
+	int statusOfCounterRecv = recvFromClient(sock, 1, NULL, &counter, NULL, (int)sizeof(int));
+	if(statusOfCounterRecv>0)
+	{
+		printf("Counter value successfully received and is %d \n",counter);
+		break; //breaks from outer while loop
+	}
+	
+}
+	
+	
+switch(counter)
+{
+	
+case 1:
+{
+	//function for max
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int result = max(size,intArr);
+	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+	successOrFailedSend(statusOfValSent);
+
+}//end of case 1
+break;
+case 2:
+{
+	//function for min
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int result = min(size,intArr);
+	int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+	successOrFailedSend(statusOfValSent);
+
+}//end of if counter == 2
+break;
+case 3:
+{
+/*
+int rowSize1, rowSize2, rowSize3;
+int colSize1, colSize2, colSize3;
+int *matrix1, *matrix2, *matrix3;
+
+int statusOfParam1 =recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+int statusOfParam2 =recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
+int statusOfParam3 =recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
+
+if(!(statusOfParam1==1 && statusOfParam2==1 && statusOfParam3==1))
+{
+	break;
+}
+*/
+
+int rowSize1,colSize1;
+int *matrix1;
+
+int statusOfParam1 =recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+
+if(!(statusOfParam1==1))
+{
+	break;
+}
+
+int rowSize2,colSize2;
+int *matrix2;
+
+int statusOfParam2 =recv2DArrays(sock, &rowSize2, &colSize2, &matrix2);
+
+if(!(statusOfParam2==1))
+{
+	break;
+}
+
+int rowSize3,colSize3;
+int *matrix3;
+
+int statusOfParam3 =recv2DArrays(sock, &rowSize3, &colSize3, &matrix3);
+
+if(!(statusOfParam3==1))
+{
+	break;
+}
+
+
+int* result = multiply(rowSize1, colSize1,matrix1,rowSize2,colSize2, matrix2,rowSize3,colSize3,matrix3);
+
+int statusOfValSent = send2DMatrixToClient(sock, rowSize3, colSize3, result);
+successOrFailedSend(statusOfValSent);
+
+}//end of case 3
+break;
+case 4:
+{//function for sorting
+
+	int size;
+	int *intArr;
+	int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+	if(statusOfRecvParam1==0)
+		break;
+	int *result = sort(size,intArr);				
+	int statusOfValSent = send1DArrayToClient(sock, size, result);
+	successOrFailedSend(statusOfValSent);
+
+}//end of case 4
+break;
+case 5:
+{ 
+	//function for word count
+	char string[2048];
+	//char *string;
+	int status = recvFromClient(sock, 3, NULL, 0, string, 2048*sizeof(char));
+	if(status==0)
+		break;
+	int result = wc(string);
+	int statusOfValSent =  sendToClient( sock, 1, NULL, result, NULL, sizeof(int));
+	successOrFailedSend(statusOfValSent);
+		
+}//end of case 5
+break;
+}//end of switch
+
+}//end of while above that checks for deregistered and maintains menu
+
+//Free the socket pointer
+free(socket_desc);
+
+return 0;
+}
+
+
+int main(int argc , char *argv[])
+{
+	//code to register with dir service
+	int statusOfRegistry = registerWithDirService();
+	if(statusOfRegistry==1)
+	{
+		printf("Dir Registry Successful \n");
+	}
+	
+	
+    int socket_desc , client_sock , c , *new_sock;
+    struct sockaddr_in server , client;
+     
+    //Create socket
+    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    if (socket_desc == -1)
+    {
+        printf("Could not create socket");
+    }
+    puts("Socket created");
+     
+    //Prepare the sockaddr_in structure
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    //server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_port = htons( 8888 );
+     
+    //Bind
+    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        //print the error message
+        perror("bind failed. Error");
+        return 1;
+    }
+    puts("bind done");
+     
+    //Listen
+    listen(socket_desc , 3);
+     
+     
+     
+	//adding code for thread that is supposed to send deregister info to directory
+	
+	pthread_t deregisterThread;
+	int statusOfDeregisterThread = pthread_create(&deregisterThread, NULL, deRegisterMenu, &deRegistered);
+	if(statusOfDeregisterThread==0)
+	{
+		 printf("Deregister Thread created successfully \n");
+	}
+	else
+	{
+		printf("Deregister Thread creation failed \n");
+	}
+	
+	
+	
+	//*************************************************************************
+     
+     
+    //Accept and incoming connection
+    puts("Waiting for incoming connections...");
+    c = sizeof(struct sockaddr_in);
+    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    {
+        puts("Connection accepted");
+         
+        pthread_t sniffer_thread;
+        new_sock = malloc(1);
+        *new_sock = client_sock;
+         
+        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
+        {
+            perror("could not create thread");
+            return 1;
+        }
+         
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( sniffer_thread , NULL);
+        puts("Handler assigned");
+    }
+     
+    if (client_sock < 0)
+    {
+        perror("accept failed");
+        return 1;
+    }
+     
+    return 0;
+}
+
+
+
