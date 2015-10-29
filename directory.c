@@ -37,6 +37,7 @@ int addToList(int ipArr[], int port, int programID, int version){
 	ptr->port = port;
 	ptr->programID = programID;
 	ptr->version = version;
+	ptr->next = NULL;
 
 	if(head == NULL){
 		head = curr = ptr;

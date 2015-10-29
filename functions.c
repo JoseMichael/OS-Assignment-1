@@ -29,25 +29,25 @@ int min(int size, int *arr){
 	return minimum;
 }
 
-int * multiply(int *a, int *b, int n, int m, int l, int *c){
+int * multiply(int row1, int col1, int *a, int row2, int col2, int *b,int row3, int col3, int *c){
     //Multiply a and b, store in c
 	int i, j, k;
 
-	for(i = 0; i < n; i++){
-		for(j = 0; j < m; j++){
-			for(k = 0; k < l; k++){
-				*(c+((i*l)+k)) = *(c+((i*l)+k)) + (*(a+((i*m)+j)) * *(b+((j*l)+k)));
+	for(i = 0; i < row1; i++){
+		for(j = 0; j < col1; j++){
+			for(k = 0; k < col2; k++){
+				*(c+((i*col2)+k)) = *(c+((i*col2)+k)) + (*(a+((i*col1)+j)) * *(b+((j*col2)+k)));
 			}
 		}
 	}
 	return c;
 }
 
-int wc(char str[]){
+int wc(char* str){
 	int i = 0, words = 0, poss = 1;
 	
-	while(str[i] != '\0'){
-		if(str[i] == ' '){
+	while(*(str+i) != '\0'){
+		if(*(str+i) == ' '){
 			poss = 1;
 		}else{
 			if(poss == 1){

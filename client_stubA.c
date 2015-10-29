@@ -141,7 +141,11 @@ int send2DMatrixToServer(int sock, int integerArray[],int row, int column)
 	return 1;
 }
 
-int* multiply(int *a, int *b, int n, int m, int l, int *c){
+int* multiply(int rowA, int colA, int *a, int rowB, int colB, int *b, int rowC, int colC, int *c){
+	
+	int n = rowA;
+	int m = colA;
+	int l = colB;
 	
 	if(sendFunctionIdentifier(3) == -1){
 		puts("Sending Function Identifier Failed");
@@ -197,7 +201,7 @@ int* multiply(int *a, int *b, int n, int m, int l, int *c){
 	return NULL;
 }
 
-int wc(char string[]){
+int wc(char* string){
 
 	if(sendFunctionIdentifier(5) == -1){
 		puts("Sending Function Identifier Failed");

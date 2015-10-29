@@ -3,11 +3,9 @@
 
 int max(int size, int *intarray);  
 
-int * multiply(int *a, int *b, int n, int m, int l, int *c);
+int * multiply(int row1, int col1, int *a, int row2, int col2, int *b,int row3, int col3, int *c);
 
-int wc(char str[]);
-
-void quicksort(int* array, int low, int high);
+int wc(char* str);
 
 int * sort(int size, int* array);
 

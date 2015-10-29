@@ -378,10 +378,10 @@ int main(int argc , char *argv[])
     return 0;
 }
 
-void receiveCharArrayFromClient(int sock, char **charArray)
+/*void receiveCharArrayFromClient(int sock, char **charArray)
 {
 	
-}
+}*/
  
 int receiveArrayFromClient(int sock, int *size, int **integerArray)
 {
@@ -522,7 +522,7 @@ if(!(statusOfParam1==1 && statusOfParam2==1 && statusOfParam3==1))
 	break;
 }
 
-int* result = multiply(matrix1, matrix2, rowSize1, colSize1, colSize2, matrix3);
+int* result = multiply(rowSize1, colSize1,matrix1,rowSize2,colSize2, matrix2,rowSize3,colSize3,matrix3);
 
 int statusOfValSent = send2DMatrixToClient(sock, rowSize3, colSize3, result);
 successOrFailedSend(statusOfValSent);
@@ -547,7 +547,8 @@ case 5:
 { 
 	//function for word count
 	char string[2048];
-	int status = recvFromClient(sock, 3, NULL, 0, string, 2048);
+	//char *string;
+	int status = recvFromClient(sock, 3, NULL, 0, string, 2048*sizeof(char));
 	if(status==0)
 		break;
 	int result = wc(string);

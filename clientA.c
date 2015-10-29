@@ -96,8 +96,11 @@ int input(){
 				for(num=0; num<rowA*columnB; num++){
 					matrix3[num]=0;
 				}
+				
+				int rowC = rowA;
+				int columnC = columnB;
 
-				int *p=multiply(matrix1, matrix2, rowA, columnA, columnB, matrix3);
+				int *p=multiply(rowA, columnA, matrix1, rowB, columnB, matrix2, rowC, columnC, matrix3);
 	
 				puts("Result is:");
 				for(num = 0; num < rowA*columnB; num++){
