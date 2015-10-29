@@ -74,6 +74,7 @@ int scanListServerR(int ipArr[], int port){
 		ptr = ptr->next;
 	}
 
+	//If duplicate found return -1
 	if(dupFound == 0){
 		return 1;
 	}else{
@@ -81,7 +82,7 @@ int scanListServerR(int ipArr[], int port){
 	}
 }
 
-int scanListServerDR(int ipArr[], int port){
+int scanListServerDR(int ipArr[]){
 
 	struct serverNode *ptr = head;
 	struct serverNode *follow = head;
@@ -89,30 +90,26 @@ int scanListServerDR(int ipArr[], int port){
 	int nodeFound = 0, i, temp = 0;
 	
 	while(ptr != NULL){
-		
-		//Check match for port
-		if(ptr->port == port){
-			//check IP
-			int noMatch = 0;
-			for(i = 0; i < 4; i++){
-				if(ptr->ip[i] != ipArr[i]){
-					noMatch = 1;
-				}
+		//check IP
+		int noMatch = 0;
+		for(i = 0; i < 4; i++){
+			if(ptr->ip[i] != ipArr[i]){
+				noMatch = 1;
 			}
-			if(noMatch == 0){
-				//Match Found
-				nodeFound = 1;
-				
-				//Delete Node
-				if(ptr == head){
-					head = NULL;
-					free(ptr);
-				}else{
-					follow->next = ptr->next;
-					free(ptr);
-				}
-				break;
+		}
+		if(noMatch == 0){
+			//Match Found
+			nodeFound = 1;
+			
+			//Delete Node
+			if(ptr == head){
+				head = NULL;
+				free(ptr);
+			}else{
+				follow->next = ptr->next;
+				free(ptr);
 			}
+			break;
 		}
 		
 		if(temp == 0){
@@ -204,6 +201,8 @@ int registerServer(int sock, int ipArr[], int port){
 		}
 	}	
 	
+	printf("Program id = %d\n",programID);
+
 	//Send Ack, to be ready fo next message
 	if(sendAck(sock) < 0){
 		puts("Sending Ack Failed");
@@ -221,6 +220,8 @@ int registerServer(int sock, int ipArr[], int port){
 		}
 	}	
 	
+	printf("Version = %d\n",programID);
+
 	//Send Ack, to be ready fo next message
 	if(sendAck(sock) < 0){
 		puts("Sending Ack Failed");
@@ -229,7 +230,7 @@ int registerServer(int sock, int ipArr[], int port){
 
 	//Register the server
 	//Check for duplicate
-	if(scanListServerR(ipArr, port) > 0){
+	if(scanListServerR(ipArr, port) < 0){
 		puts("Duplicate: Existing IP and Port Address");
 		return -1;
 	}else{
@@ -244,9 +245,9 @@ int registerServer(int sock, int ipArr[], int port){
 	return 1;
 }
 
-int deRegisterServer(int ipArr[], int port){
+int deRegisterServer(int ipArr[]){
 	//Deregister Server
-	if(scanListServerDR(ipArr, port) < 0){
+	if(scanListServerDR(ipArr) < 0){
 		puts("Deregister Failed");
 		return -1;
 	}else{
@@ -295,10 +296,33 @@ int runClientSetup(int sock){
 
 	//Find the server and send the IP and Port to the client
 	struct serverNode *ptr = scanListClient(programID, version);
+	int requestResult;
 	if(ptr == NULL){	
+		//Send Server not Found
+		requestResult = 0;
+		statusOfSend = send(sock, &requestResult, sizeof(requestResult), 0);
+		if(statusOfSend < 0){
+			puts("Send Query result Failed");
+			return -1;
+		}
+
 		puts("No Server Found");
 		return -1;
 	}else{
+		//Send Server Found
+		requestResult = 1;
+		statusOfSend = send(sock, &requestResult, sizeof(requestResult), 0);
+		if(statusOfSend < 0){
+			puts("Send Query result Failed");
+			return -1;
+		}	
+
+		//Wait for ACK
+		if(waitForAck(sock) < 0){
+			puts("ACK not received");
+			return -1;
+		}
+		
 		//Send the IP and Port
 		statusOfSend = send(sock, ptr->ip, sizeof(int)*4, 0);
 		if(statusOfSend < 0){
@@ -327,7 +351,7 @@ int runClientSetup(int sock){
 
 int runServerSetup(int sock, int ipArr[]){
 	//Get Server and the Service to Register/Deregister
-	int requestType, statusOfRead, port;
+	int requestType, statusOfRead, statusOfSend, port;
 	int ipArray[4];
 
 	//Get type of request, register/deregister
@@ -341,22 +365,7 @@ int runServerSetup(int sock, int ipArr[]){
 		}
 	}
 
-	//Send Ack, to be ready fo next message
-	if(sendAck(sock) < 0){
-		puts("Sending Ack Failed");
-		return -1;
-	}
-
-	//Wait for Port
-	while(1){
-		statusOfRead = recv(sock , &port , sizeof(port) , 0);
-		if(statusOfRead > 0){
-			break;
-		}else{
-			puts("Error receiving port number");
-			return -1;
-		}
-	}
+	printf("Got Request %d",requestType);
 
 	//Send Ack, to be ready fo next message
 	if(sendAck(sock) < 0){
@@ -364,24 +373,85 @@ int runServerSetup(int sock, int ipArr[]){
 		return -1;
 	}
 
+	puts("Switching on Request");
+	int processStatus;
+	
 	//Now switch based on Request Type
 	switch(requestType){
 		case 0:
-			if(deRegisterServer(ipArray, port) < 0){
+			if(deRegisterServer(ipArray) < 0){
+				processStatus = 0;
+				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
+				if(statusOfSend < 0){
+					puts("Send processStatus Failed");
+					return -1;
+				}
 				puts("Deregister Server failed");
 				return -1;
+			}else{
+				processStatus = 1;
+				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
+				if(statusOfSend < 0){
+					puts("Send processStatus Failed");
+				}
 			}
 		break;
 		case 1:
+			puts("Waiting for port");
+
+			//Wait for Port
+			while(1){
+				statusOfRead = recv(sock , &port , sizeof(port) , 0);
+				if(statusOfRead > 0){
+					break;
+				}else{
+					puts("Error receiving port number");
+					return -1;
+				}
+			}
+
+			//Send Ack, to be ready fo next message
+			if(sendAck(sock) < 0){
+				puts("Sending Ack Failed");
+				return -1;
+			}
+
 			if(registerServer(sock, ipArray, port) < 0){
+				processStatus = 0;
+				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
+				if(statusOfSend < 0){
+					puts("Send processStatus Failed");
+					return -1;
+				}
 				puts("Register Server failed");
 				return -1;
+			}else{
+				processStatus = 1;
+				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
+				if(statusOfSend < 0){
+					puts("Send processStatus Failed");
+					return -1;
+				}
 			}
 		break;
 		default:
 			puts("Invalid Server Request");
 			return -1;
 	}
+
+//TODO: Remove Test Code
+//Print linked list
+struct serverNode *ptr = head;
+int counter = 0;
+	if(ptr == NULL){
+		puts("No Server Found In List");
+		return -1;
+	}
+	while(ptr != NULL){
+		counter++;
+		ptr = ptr->next;
+	}
+printf("No. of servers: %d",counter);
 
 	//Successful
 	return 1;
@@ -406,51 +476,51 @@ void *connection_handler(void *args)
 	puts("Connection Started");
 	while(1){
 		statusOfRead = recv(sock , &type , sizeof(type) , 0);
-		if(statusOfRead < 0){
+		if(statusOfRead > 0){
+			break;
+		}else{
 			puts("Received Failed - Connection Terminated");
 			return 0;
 		}
-		
-		//Send Ack, to be ready fo next message
-		if(sendAck(sock) < 0){
-			puts("Sending Ack Failed");
+	}
+
+	puts("Got Type Client/Server");
+	
+	//Send Ack, to be ready fo next message
+	if(sendAck(sock) < 0){
+		puts("Sending Ack Failed");
+		//Free the socket pointer
+		free(initArgs);
+		return 0;
+	}
+
+	switch(type){
+		case 0:
+			//Call client
+			if(runClientSetup(sock) < 0){
+				puts("Lookup Failure - Connection Terminated");
+			}
 			//Free the socket pointer
 			free(initArgs);
 			return 0;
-		}
-
-		switch(type){
-			case 0:
-				//Call client
-				if(runClientSetup(sock) < 0){
-					puts("Lookup Failure - Connection Terminated");
-				}
-				//Free the socket pointer
-				free(initArgs);
-				return 0;
-			break;
-			case 1:
-				//Call Server
-				if(runServerSetup(sock, ipArr) < 0){
-					puts("Register/Unregister Failure - Connection Terminated");
-				}
-				//Free the socket pointer
-				free(initArgs);
-				return 0;
-			break;
-			default:
-				//Invalid Value
-				puts("Unknown Request - Connection Terminated");
-				//Free the socket pointer
-				free(initArgs);
-				return 0;	
-		}
+		break;
+		case 1:
+			puts("Calling Server");
+			//Call Server
+			if(runServerSetup(sock, ipArr) < 0){
+				puts("Register/Unregister Failure - Connection Terminated");
+			}
+			//Free the socket pointer
+			free(initArgs);
+			return 0;
+		break;
+		default:
+			//Invalid Value
+			puts("Unknown Request - Connection Terminated");
+			//Free the socket pointer
+			free(initArgs);
+			return 0;	
 	}
-	
-	//Will never be called
-	//Free the socket pointer
-	free(initArgs);
-	return 0;
 }
 
 int main(){
@@ -500,7 +570,6 @@ int main(){
          
 		//Initialize argument structure
 		threadArgs *args = malloc(sizeof *args);
-		args->sock = socket_desc;
 		
 		//Get IP Address of Server/Client
 	  	sprintf(address, "%s", inet_ntoa(client.sin_addr));
@@ -515,6 +584,8 @@ int main(){
         pthread_t sniffer_thread;
         new_sock = malloc(1);
         *new_sock = client_sock;
+		
+		args->sock = *new_sock;
 		
         if(pthread_create( &sniffer_thread , NULL ,  connection_handler , args) < 0)
         {

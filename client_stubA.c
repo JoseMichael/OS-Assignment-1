@@ -335,7 +335,7 @@ int * sort(int size, int* intarray){
 
 int main(){
 
-	int statusOfSend, statusOfRead;
+	int statusOfSend, statusOfRead, queryResult;
     struct sockaddr_in server;
     
 	//Create socket
@@ -390,6 +390,27 @@ int main(){
 		return 0;
 	}
 	
+	//Get Status of Server Found or Not
+	statusOfRead = recv(sock , &queryResult , sizeof(queryResult),0);
+	if(statusOfRead < 0){
+		puts("Receive Query Result failed");
+		close(sock);
+		return 0;
+	}else{
+		if(queryResult == 0){
+			puts("Server Not Found");
+			close(sock);
+			return 0;
+		}
+	}
+
+	//Send the ACK
+	if(sendAck(sock) < 0){
+		puts("Send ACK failed");
+		close(sock);
+		return 0;
+	}
+
 	//Get IP
 	statusOfRead = recv(sock , &ip , sizeof(int)*4,0);
 	if(statusOfRead < 0){
