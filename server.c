@@ -98,29 +98,6 @@ int registerWithDirService()
 		printf("Connection to Directory Service failed \n");
 		return 0;
 	}
-	else
-	{
-		printf("Cool Connection to Directory Service \n");
-	}
-	
-	printf("Time for dummy \n");
-	
-	//first waiting for dummy ack, must DELETE this code ================
-	/*
-	int statusOfAck2;
-	statusOfAck2 = waitForAck(sockToDirServer);
-	if(statusOfAck2 < 0)
-	{
-		printf("Ack from Dir Service failed \n");
-		return 0;
-	}
-	else
-	{
-		printf("Dummy ack was sent to be honest \n");
-	}
-	*/
-	printf("No dummies activated \n");
-	printf("Done with dummy ack \n");
 	
 	//we first send '1' to the Dir Service which shows it that we are a server
 	int statusOfServerSend = sendToClient(sockToDirServer, 1, NULL, 1, NULL, sizeof(int));
@@ -155,8 +132,8 @@ int registerWithDirService()
 	}
 	
 	//now we send the port
-	//here 8000 is the port that we are listening to for connections from the dir service
-	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 8000, NULL, sizeof(int));
+	//here 8888 is the port that we are listening to for connections from the dir service
+	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 8888, NULL, sizeof(int));
 	if(statusOfPortSend!=1)
 	{
 		printf("Sending Port Number failed \n");
@@ -200,9 +177,20 @@ int registerWithDirService()
 		return 0;
 	}
 	
-	printf("Service successfully registered \n");
-	close(sockToDirServer); //closing the socket
-	return 1;
+	int registrationStatus=0;
+	int statusOfRegistrationStatus = recvFromClient(sockToDirServer, 1, NULL, &registrationStatus, NULL, sizeof(int));
+	
+	if(registrationStatus==1)
+	{
+		printf("Service successfully registered \n");
+		close(sockToDirServer); //closing the socket
+		return 1;
+	}
+	else
+	{
+		printf("Registration failed \n");
+		return 0;
+	}
 }
 
 
@@ -234,7 +222,7 @@ int deregisterWithDirService()
 		return 0;
 	}
 	
-	//we then send '0' to indicate that we want to Register
+	//we then send '0' to indicate that we want to deregister
 	int statusOfRegisterMsgSend = sendToClient(sockToDirServer, 1, NULL, 0, NULL, sizeof(int));
 	if(statusOfRegisterMsgSend!=1)
 	{
@@ -249,25 +237,22 @@ int deregisterWithDirService()
 		return 0;
 	}
 	
-	//now we send the port
-	//here 8000 is the port that we are listening to for connections from the dir service
-	int statusOfPortSend = sendToClient(sockToDirServer, 1, NULL, 8000, NULL, sizeof(int));
-	if(statusOfPortSend!=1)
+	int deregistrationStatus=0;
+	int statusOfDeregistrationStatus = recvFromClient(sockToDirServer, 1, NULL, &deregistrationStatus, NULL, sizeof(int));
+	
+	if(statusOfDeregistrationStatus==1)
 	{
-		printf("Sending Port Number failed \n");
+		printf("Service successfully deregistered \n");
+		close(sockToDirServer); //closing the socket
+		return 1;
+	}
+	else
+	{
+		printf("Deregistration failed \n");
 		return 0;
 	}
 	
-	statusOfAck = waitForAck(sockToDirServer);
-	if(statusOfAck < 0)
-	{
-		printf("Ack from Dir Service failed \n");
-		return 0;
-	}
-	
-	printf("Service successfully deregistered \n");
-	close(sockToDirServer); //closing the socket
-	return 1;
+
 }
 
 
@@ -342,6 +327,8 @@ int main(int argc , char *argv[])
     //Listen
     listen(socket_desc , 3);
      
+     
+     
 	//adding code for thread that is supposed to send deregister info to directory
 	
 	pthread_t deregisterThread;
@@ -410,6 +397,8 @@ int counter=0;
     
 while(deRegistered==0)
 {
+	//printf("Value of deregistered is %d \n",deRegistered);
+	//TODO: Add function to send client some message when the connection is terminated due to deRegistered=0
     
 while(1)
 {
