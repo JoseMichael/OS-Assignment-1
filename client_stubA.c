@@ -2,9 +2,14 @@
 #include<arpa/inet.h> //inet_addr
 #include<stdio.h>
 #include "functions.h"
+#define programID 1
+#define version 1
 
 //Globals
 int sock;
+
+//int programID=1;
+//int version=1;
 
 int sendAck(int sock)
 {
@@ -439,6 +444,7 @@ int main(){
 	sprintf(address, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 
 	//Trim the char array
+	printf("The address we have is %s \n",address);
 	
 	//Close connection to Directory Service
 	close(sock);
@@ -453,9 +459,11 @@ int main(){
     puts("Socket created");
 	
 	//Now setup Server connection
-	server.sin_addr.s_addr = inet_addr(address);
+	//server.sin_addr.s_addr = inet_addr(address);
+	server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
     server.sin_port = htons( port );
+    printf("Port it is trying to connect to is %d \n",port);
 	
 	//Connect to Remote Server
 	puts("Trying to connect to Remote Server");

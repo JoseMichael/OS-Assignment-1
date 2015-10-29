@@ -352,7 +352,6 @@ int runClientSetup(int sock){
 int runServerSetup(int sock, int ipArr[]){
 	//Get Server and the Service to Register/Deregister
 	int requestType, statusOfRead, statusOfSend, port;
-	int ipArray[4];
 
 	//Get type of request, register/deregister
 	while(1){
@@ -379,7 +378,7 @@ int runServerSetup(int sock, int ipArr[]){
 	//Now switch based on Request Type
 	switch(requestType){
 		case 0:
-			if(deRegisterServer(ipArray) < 0){
+			if(deRegisterServer(ipArr) < 0){
 				processStatus = 0;
 				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
 				if(statusOfSend < 0){
@@ -416,7 +415,7 @@ int runServerSetup(int sock, int ipArr[]){
 				return -1;
 			}
 
-			if(registerServer(sock, ipArray, port) < 0){
+			if(registerServer(sock, ipArr, port) < 0){
 				processStatus = 0;
 				statusOfSend = send(sock, &processStatus, sizeof(processStatus), 0);
 				if(statusOfSend < 0){
@@ -439,20 +438,6 @@ int runServerSetup(int sock, int ipArr[]){
 			return -1;
 	}
 
-//TODO: Remove Test Code
-//Print linked list
-struct serverNode *ptr = head;
-int counter = 0;
-	if(ptr == NULL){
-		puts("No Server Found In List");
-		return -1;
-	}
-	while(ptr != NULL){
-		counter++;
-		ptr = ptr->next;
-	}
-printf("No. of servers: %d",counter);
-
 	//Successful
 	return 1;
 }
@@ -468,9 +453,12 @@ void *connection_handler(void *args)
 	threadArgs *initArgs = args;
 
 	//Assign values
+	printf("Quick printing ip \n");
 	sock = initArgs->sock;
 	for(i = 0; i < 4; i++){
 		ipArr[i] = initArgs->ip[i];
+		//TODO: Del test statement
+		printf("%d",ipArr[i]);
 	}
 
 	puts("Connection Started");
