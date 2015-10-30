@@ -331,7 +331,7 @@ int createClientStub(charHolder c[][6], int numRows){
 	//has 6 columns
 
 	//Write include files
-	if(write("includefiles.c","client_stub.c") < 0){
+	if(write("includeclientfiles.c","client_stub.c") < 0){
 		puts("Header Files Write failed");
 		return -1;
 	}	
@@ -496,11 +496,16 @@ int createHeaderFile(charHolder c[][6], int numRows){
 }
 
 int createServerStub(charHolder c[][6], int numRows){
+	printf("Checkpoint 0 \n");
+
 	//Write include files
 	if(write("includeserverfiles.c","server_stub.c") < 0){
 		puts("Header Files Write failed");
 		return -1;
 	}
+	
+	
+	printf("Checkpoint 1 \n");
 
 	//Write global variables
 	FILE *fp;
@@ -534,44 +539,338 @@ int createServerStub(charHolder c[][6], int numRows){
 	//Write Switch Cases
 	int counter = 0;
 	int funcid = -1;
+	int lastFunctId = -1;
 	
-	while(counter < numRows){
-		if(funcid == -1){
-			sscanf(c[counter][0].value,"%d",&funcid);
+	printf("Numrows is %d \n",numRows);
+	
+	while(counter < numRows)
+	{
+		sscanf(c[counter][0].value,"%d",&funcid);
+			//puts("Server Check Point 2");
 
-			//Start A Case
+		if((funcid!=lastFunctId) && (lastFunctId!=-1))
+		{
+			puts("Server Check Point 3");
+			//End old case and start a new case
+			sprintf(tempBuff,"break; \n");
+			fputs(tempBuff,fp);
 			sprintf(tempBuff,"%s %d%s\n","case",funcid,":\n");
 			fputs(tempBuff,fp);
+			lastFunctId=funcid;
+		}
+		else if(funcid!=lastFunctId)
+		{
+			puts("Server Check Point 4");
+			//start new case
+			sprintf(tempBuff,"%s %d%s\n","case",funcid,":\n");
+			fputs(tempBuff,fp);
+			lastFunctId=funcid;
+		}
 
-			//get param
-			if(strcmp(c[counter][5],"int") == 0){
+		//get param
+		if(strcmp(c[counter][5].value,"int") == 0)
+		{
+			puts("Server Check Point 5");
 			int tempfuncid1, tempfuncid2;
 			sscanf(c[counter+1][0].value,"%d",&tempfuncid1);
 			sscanf(c[counter+2][0].value,"%d",&tempfuncid2);
-				if(tempfuncid1==funcid)
+			if(tempfuncid1==funcid)
+			{
+				if(strcmp(c[counter+1][5].value,"int*") == 0)
 				{
-					if(strcmp(c[counter+1][5],"int*") == 0)
+					puts("Server Check Point 6");
+					//add 1d array functions
+					/*
+					 * 	int size;
+						int *intArr;
+						int statusOfRecvParam1 = receiveArrayFromClient(sock, &size, &intArr);
+						if(statusOfRecvParam1==0)
+							break;
+					 */
+					 sprintf(tempBuff,"%s %s%s\n","int",c[counter][3].value,"; \n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s %s%s\n","int *",c[counter+1][3].value,"; \n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s %s%s %s %s%s%s%s %s\n","int","statusOfRecv",c[counter+1][3].value,"=","receiveArrayFromClient(sock, &",c[counter][3].value,", &",c[counter+1][3].value,");\n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s%s%s\n","if(statusOfRecv",c[counter+1][3].value,"==0)\n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s\n","break;\n");
+					 fputs(tempBuff,fp);
+					 
+					 //check condition for when next funct id is not the same
+					 int funcidToTest;
+					 sscanf(c[counter+2][0].value,"%d",&funcidToTest);
+					 if(funcidToTest!=funcid)
+					 {
+					 	
+					 	
+					 	/*
+					 	 * 	int result = max(size,intArr);
+							int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+							successOrFailedSend(statusOfValSent);
+					 	 */
+					 	//initiate procedures to return the value
+					 	int counter2=0;
+					 	char tempstr[100], deststr[100], testarr[100];
+					 	int tfuncid;
+					 	strcpy(deststr,"");
+					 	sprintf(deststr,"%s(",c[counter][1].value);
+					 	int someIndex = 0;
+					 	while(counter2<numRows)
+					 	{
+					 		
+					 		sscanf(c[counter2][0].value,"%d",&tfuncid);
+					 		if(tfuncid==funcid)
+					 		{
+					 			if(someIndex == 0){
+					 				someIndex++;
+					 				sprintf(tempstr,"%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}else{
+					 				sprintf(tempstr,",%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}
+					 		}
+					 		//strcat(testarr,deststr);
+					 		counter2++;
+					 	}
+					 	strcat(deststr,")");
+					 	printf("The final values for it are %s \n",deststr);
+					 	
+					 	//printing to file
+					 	sprintf(tempBuff,"%s %s%s%s\n",c[counter+1][2].value,"result = ",deststr,"; \n");
+					 	fputs(tempBuff,fp);
+ 	
+					 }
+					counter = counter + 2;
+				}
+				else if(strcmp(c[counter+1][5].value,"int") == 0)
+				{
+					puts("Server Check Point 7");
+					//add code to check if next variable is array
+					if((strcmp(c[counter+2][5].value,"int*") == 0)&&(tempfuncid2==funcid))
 					{
-						//add 1d array functions
-					}
-					else if(strcmp(c[counter+1][5],"int"&&) == 0)
-					{
-						//add code to check if next variable is array
-						if(strcmp(c[counter+2][5],"int") == 0)
-						{
+						puts("Server Check Point 77");
+					//this means next param is an int* and belongs to same function
+					//add code to set up functions for 3d array
 					
+					/*
+					 *  int rowSize1,colSize1;
+						int *matrix1;
+
+						int statusOfParam1 =recv2DArrays(sock, &rowSize1, &colSize1, &matrix1);
+
+						if(!(statusOfParam1==1))
+						{
+							break;
 						}
+					 */
+					 
+					 sprintf(tempBuff,"%s %s%s","int",c[counter][3].value,"; \n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s %s%s","int",c[counter+1][3].value,";\n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s%s%s","int *",c[counter+2][3].value,";\n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s %s%s %s %s%s%s%s%s","int","statusOf",c[counter+2][3].value,"=","recv2DArrays(sock, &",c[counter][3].value," &",c[counter+1][3].value,"); \n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s%s%s","if(statusOf",c[counter+2][3].value," ==0) \n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s\n","break;\n");
+					 fputs(tempBuff,fp);
+					 sprintf(tempBuff,"%s%s%s","successOrFailedSend(statusOf",c[counter+2][3].value,"); \n");
+					 //successOrFailedSend(statusOfValSent);
+					
+					
+					 //check condition for when next funct id is not the same
+					 int funcidToTest;
+					 sscanf(c[counter+3][0].value,"%d",&funcidToTest);
+					 if(funcidToTest!=funcid)
+					 {
+					 	
+					 	
+					 	/*
+					 	 * 	int result = max(size,intArr);
+							int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+							successOrFailedSend(statusOfValSent);
+					 	 */
+					 	//initiate procedures to return the value
+					 	int counter2=0;
+					 	char tempstr[100], deststr[100], testarr[100];
+					 	int tfuncid;
+					 	strcpy(deststr,"");
+					 	sprintf(deststr,"%s(",c[counter][1].value);
+					 	int someIndex = 0;
+					 	while(counter2<numRows)
+					 	{
+					 		
+					 		sscanf(c[counter2][0].value,"%d",&tfuncid);
+					 		if(tfuncid==funcid)
+					 		{
+					 			if(someIndex == 0){
+					 				someIndex++;
+					 				sprintf(tempstr,"%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}else{
+					 				sprintf(tempstr,",%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}
+					 		}
+					 		//strcat(testarr,deststr);
+					 		counter2++;
+					 	}
+					 	strcat(deststr,")");
+					 	printf("The final values for it are %s \n",deststr);
+					 	
+					 	//printing to file
+					 	sprintf(tempBuff,"%s %s%s%s\n",c[counter+1][2].value,"result = ",deststr,"; \n");
+					 	fputs(tempBuff,fp);
+ 	
+					 }
+					
+					
+					counter = counter + 3;
 					}
-					else
-					{
-						//add code to put in int functions
-					}
+
+				}
+				else
+				{
+					puts("Server Check Point 8");
+					//add code to put in int functions
+					counter = counter + 1;
+					/*
+					 * int statusOfCounterRecv = recvFromClient(sock, 1, NULL, &counter, NULL, (int)sizeof(int));
+					 */
+					 sprintf(tempBuff,"%s %s%s%s%s%s\n","int","statusOf",c[counter][3].value,"Recv = recvFromClient(sock, 1, NULL, &",c[counter][3].value,", NULL, 0);\n");
+					 fputs(tempBuff,fp);
+					 int funcidToTest;
+					 sscanf(c[counter+2][0].value,"%d",&funcidToTest);
+					 if(funcidToTest!=funcid)
+					 {
+					 	//initiate procedures to return the value
+					 }
 				}
 			}
-		}else{
+			else
+			{
+				puts("Server Check Point 9");
+			//add code to put in int functions since next row is another function
+			
+			/*
+			 * int recvRowSizeStatus = recvFromClient(sock, 1, NULL, rowSize, NULL, 0);
+			 * int result = funct(int dsfdsf);		
+			 * int statusOfSizeSend = sendToClient(sock, 1, NULL, sizeOfArray, NULL, 0);
+					successOrFailedSend(statusOfSizeSend);
+						 */
+				sprintf(tempBuff,"%s%s%s%s%s","int statusOfRecv",c[counter][3].value," = recvFromClient(sock, 1, NULL, ",c[counter][3].value,", NULL, 0); \n");
+				fputs(tempBuff,fp);
+				sprintf(tempBuff,"%s%s%s%s%s%s",c[counter][2].value," result = ",c[counter][1].value,"(",c[counter][3].value,"); \n");
+				fputs(tempBuff,fp);
+				sprintf(tempBuff,"%s%s%s","int statusOfSend",c[counter][3].value," = sendToClient(sock, 1, NULL, result, NULL, 0); \n");
+				fputs(tempBuff,fp);
+				sprintf(tempBuff,"%s%s%s","successOrFailedSend(statusOfSend",c[counter][3].value,"); \n");
+				fputs(tempBuff,fp);
+				
+				
+			
+			
+			
+			counter = counter + 1;
+			}
+		}//end of if it was int
+		else if(strcmp(c[counter][5].value,"char*") == 0)
+		{
+			puts("Server Check Point 10");
+			//add code to put in string functions
+			/*
+			 * 	char string[2048];
+				int status = recvFromClient(sock, 3, NULL, 0, string, 2048*sizeof(char));
+				if(status==0)
+					break;
+				int result = wc(string);
+				int statusOfValSent =  sendToClient( sock, 1, NULL, result, NULL, sizeof(int));
+				successOrFailedSend(statusOfValSent);
+			 */
+			sprintf(tempBuff,"%s%s%s","char ",c[counter][3].value,"[2048]; \n");
+			fputs(tempBuff,fp);
+			sprintf(tempBuff,"%s%s%s%s%s","int statusOf ",c[counter][3].value," = recvFromClient(sock, 3, NULL, 0, ",c[counter][3].value,", 2048*sizeof(char)); \n");
+			fputs(tempBuff,fp);
+			sprintf(tempBuff,"%s%s%s","if (statusOf",c[counter][3].value,"==0)\n");
+			fputs(tempBuff,fp);
+			sprintf(tempBuff,"%s","break;\n");
+			fputs(tempBuff,fp);
+			
+			
+			 int funcidToTest;
+					 sscanf(c[counter+1][0].value,"%d",&funcidToTest);
+					 if(funcidToTest!=funcid)
+					 {
+					 	
+					 	
+					 	/*
+					 	 * 	int result = max(size,intArr);
+							int statusOfValSent = sendToClient(sock, 1, NULL, result, NULL, 0);
+							successOrFailedSend(statusOfValSent);
+					 	 */
+					 	//initiate procedures to return the value
+					 	int counter2=0;
+					 	char tempstr[100], deststr[100], testarr[100];
+					 	int tfuncid;
+					 	strcpy(deststr,"");
+					 	sprintf(deststr,"%s(",c[counter][1].value);
+					 	int someIndex = 0;
+					 	while(counter2<numRows)
+					 	{
+					 		
+					 		sscanf(c[counter2][0].value,"%d",&tfuncid);
+					 		if(tfuncid==funcid)
+					 		{
+					 			if(someIndex == 0){
+					 				someIndex++;
+					 				sprintf(tempstr,"%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}else{
+					 				sprintf(tempstr,",%s",c[counter2][3].value);
+					 				strcat(deststr,tempstr);
+					 			}
+					 		}
+					 		//strcat(testarr,deststr);
+					 		counter2++;
+					 	}
+					 	strcat(deststr,")");
+					 	printf("The final values for it are %s \n",deststr);
+					 	
+					 	//printing to file
+					 	sprintf(tempBuff,"%s %s%s%s\n",c[counter][2].value,"result = ",deststr,"; \n");
+					 	fputs(tempBuff,fp);
+					 	
+					 	
+					 	/*
+					 	 * 			int result = wc(string);
+									int statusOfValSent =  sendToClient( sock, 1, NULL, result, NULL, sizeof(int));
+									successOrFailedSend(statusOfValSent);
+					 	 */
+					 	 sprintf(tempBuff,"%s%s%s","int statusOfSent",c[counter][3].value," = sendToClient( sock, 1, NULL, result, NULL, sizeof(int));); \n");
+					 	 fputs(tempBuff,fp);
+					 	 sprintf(tempBuff,"%s%s%s","successOrFailedSend(statusOfSent",c[counter][3].value,"); \n");
+					 	 fputs(tempBuff,fp); 
+ 	
+					 }
+					
+			
+			
+			
+			counter = counter + 1;
 		}
-		counter++;
-	}
+		else
+		{
+			//***************INCORRECT IDL SPECIFICATION****************
+			printf("testtttt \n");
+		}
+		
+	}//end of while
+puts("Server Check Point 4s");
 	
 	//Write the after switch
 	if(write("afterswitch.c","server_stub.c") < 0){
@@ -666,6 +965,7 @@ for(i=0; i<countOfParams; i++)
 
 	//Remove existing server stub
 	remove("server_stub.c");
+	puts("Here");
 	//Create Server stub
 	if(createServerStub(c, countOfParams) < 0){
 		puts("Server Stub Generation Failed");
