@@ -182,7 +182,7 @@ void writeFunc(char def[], int fid){
 	const char delim2[1] = " ";
 	int saveCount = 0;
 	char intSaver[100];
-	char receive[100], functionId[100], temp[50];
+	char receive[100], functionId[100], temp[50], trackerInt[50], trackerChar[50];
 	char *token, *sepInt, *endstr1, *endstr2;
 	int i;
 	
@@ -221,6 +221,9 @@ void writeFunc(char def[], int fid){
 					strcpy(temp,sepInt);
 					sepInt = strtok_r(NULL, delim2,&endstr2);
 				}				
+		
+				//remeber the variable
+				strcpy(trackerInt,temp);
 				
 				if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
 					sprintf(functionId,"%s(%s,%s)%s","if(sendIntArray",intSaver,temp,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
@@ -276,6 +279,9 @@ void writeFunc(char def[], int fid){
 					sepInt = strtok_r(NULL, delim2,&endstr2);
 				}
 
+				//remeber the variable
+				strcpy(trackerChar,temp);
+
 				if(strstr(receive,"int*") != NULL || strstr(receive,"char*") != NULL){
 					sprintf(functionId,"%s(%d,%s)%s","if(sendString",2048,temp,"<0){\nputs(\"Send Failure\");\nreturn NULL;\n}\n");
 				}else{
@@ -298,10 +304,11 @@ void writeFunc(char def[], int fid){
 		fputs(functionId,fp);		
 	
 		//declare new array
-		fputs("int tempArray[num1];\n",fp);
-		sprintf(functionId,"%s(%s,%s)%s","if(readIntArray","num1","tempArray","<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
+		//fputs("int tempArray[num1];\n",fp);
+		sprintf(functionId,"%s(%s,%s)%s","if(readIntArray","num1",trackerInt,"<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
 		fputs(functionId,fp);
-		fputs("return tempArray;\n",fp);
+		sprintf(functionId,"%s %s;\n","return", trackerInt);
+		fputs(functionId,fp);
 	}else if(strstr(receive,"int") != NULL){
 		//declare new integer
 		fputs("int num1;\n",fp);
@@ -309,10 +316,12 @@ void writeFunc(char def[], int fid){
 		fputs(functionId,fp);
 		fputs("return num1;\n",fp);
 	}else if(strstr(receive,"char*") != NULL){
-		fputs("char tempString[100];\n",fp);
-		sprintf(functionId,"%s(%d,%s)%s","if(readstring",2048,"tempString","<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
+		//fputs("char tempString[100];\n",fp);
+		sprintf(functionId,"%s(%d,%s)%s","if(readstring",2048,trackerChar,"<0){\nputs(\"Receive Failure\");\nreturn NULL;\n}\n");
 		fputs(functionId,fp);
-		fputs("return tempString;\n",fp);
+		sprintf(functionId,"%s %s;\n","return", trackerChar);
+		fputs(functionId,fp);
+		//fputs("return tempString;\n",fp);
 	}
 
 	fputs("}",fp);
